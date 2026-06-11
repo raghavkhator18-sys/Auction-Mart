@@ -481,69 +481,7 @@ AuctionMartContext
 ├── Listing Actions  → handleCreateListing()
 ├── Admin Actions    → handleClearFlag(), handleModifyUserStatus()
 └── Simulation       → triggerBiddingWar()
-```
 
-Accessed anywhere via the `useAuctionMart()` custom hook.
 
----
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org) ≥ 18
-- npm ≥ 9
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/AuctionMart.git
-cd AuctionMart
-
-# Install frontend dependencies
-npm install
-
-# Install backend dependencies
-cd server
-npm install
-cd ..
-```
-
-### Running the App
-
-```bash
-# Terminal 1 — Start the backend API server (port 5000)
-cd server
-node server.js
-
-# Terminal 2 — Start the frontend dev server (port 3000)
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 📜 Scripts
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Start Vite dev server on port 3000 |
-| `npm run build` | Create production build in `dist/` |
-| `npm run preview` | Preview the production build locally |
-| `npm run lint` | Run TypeScript type-checking (`tsc --noEmit`) |
-
----
-
-## 🔐 Environment Variables
-
-Create a `.env` file in the project root:
-
-```env
-APP_URL="http://localhost:3000"
-VITE_API_BASE_URL="http://localhost:3000/api"
-NODE_ENV="development"
-PORT=3000
-```
 
