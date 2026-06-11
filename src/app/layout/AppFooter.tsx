@@ -11,7 +11,7 @@ export const AppFooter: React.FC = () => {
           </button>
           <span>•</span>
           <button id="footer-link-terms" className="hover:text-neutral-900 cursor-pointer">
-            Buyer Protection Escrow Policy
+            Buyer Protection Policy
           </button>
         </div>
       </div>

@@ -189,7 +189,7 @@ export const MyBids: React.FC<MyBidsProps> = ({
         </div>
         <button
           id="claim-lot-btn"
-          onClick={() => alert("Redirecting to secured Escrow delivery gateway...")}
+          onClick={() => alert("Redirecting to secured delivery gateway...")}
           className="text-white bg-blue-600 hover:bg-blue-700 text-[10px] font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer shadow-xs"
         >
           Claim Ownership
