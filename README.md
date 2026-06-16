@@ -2,18 +2,6 @@
 
 # 🔨 AuctionMart
 
-**A premium real-time auction marketplace built with React, TypeScript & modular architecture**
-
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)](https://expressjs.com)
-[![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
-</div>
-
 ## 🎯 Overview
 
 AuctionMart is a full-featured online auction platform where users can browse, bid on, and list luxury items across categories like watches, automobiles, collectibles, and tech. The application supports two roles — **Client** (bidder/seller) and **Admin** (moderator) — with a clean separation of concerns via a modular, layered frontend architecture and an Express + SQLite backend API.
@@ -328,23 +316,23 @@ Welcome, User
 
 
 ┌────────────────────────────────────────────┐ ┌─────────────────────────────┐
-│ RECENT BID ACTIVITY                         │ │ MEMBERSHIP / STATUS         │
-│                                              │ │                             │
-│ Auction 1                                   │ │ KYC Status                  │
-│ Auction 2                                   │ │ Membership Type             │
-│ Auction 3                                   │ │ Benefits                    │
-│ Auction 4                                   │ │                             │
+│ RECENT BID ACTIVITY                        │ │ MEMBERSHIP / STATUS         │
+│                                            │ │                             │
+│ Auction 1                                  │ │ KYC Status                  │
+│ Auction 2                                  │ │ Membership Type             │
+│ Auction 3                                  │ │ Benefits                    │
+│ Auction 4                                  │ │                             │
 └────────────────────────────────────────────┘ └─────────────────────────────┘
 
 
 ┌────────────────────────────────────────────┐ ┌─────────────────────────────┐
-│ ACTIVE AUCTIONS                             │ │ RECOMMENDED AUCTIONS        │
-│                                              │ │                             │
-│ Product Name                                │ │ Suggested Item 1            │
-│ Current Bid                                 │ │ Suggested Item 2            │
-│ Status                                       │ │ Suggested Item 3            │
-│ Time Remaining                              │ │                             │
-│ [View Details]                              │ │ [View More]                 │
+│ ACTIVE AUCTIONS                            │ │ RECOMMENDED AUCTIONS        │
+│                                            │ │                             │
+│ Product Name                               │ │ Suggested Item 1            │
+│ Current Bid                                │ │ Suggested Item 2            │
+│ Status                                     │ │ Suggested Item 3            │
+│ Time Remaining                             │ │                             │
+│ [View Details]                             │ │ [View More]                 │
 └────────────────────────────────────────────┘ └─────────────────────────────┘
 
 
