@@ -21,3 +21,12 @@ yarn-error.log*
 
 # mac
 .DS_Store
+
+# SQLite databases
+Backend/database/*.db
+
+# User uploads
+Backend/uploads/*
+
+# Keep folder structure
+!Backend/uploads/.gitkeep
