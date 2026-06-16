@@ -1,7 +1,7 @@
 require("dotenv").config({ path: "../.env" });
 const express = require("express");
 const path = require("path");
-const db = require("./db");
+require("./db");
 const cors = require("cors");
 
 const app = express();
@@ -11,6 +11,9 @@ const authRoutes = require("./routes/authRoutes");
 
 // ─── New Auction Routes ────────────────────────────────────────
 const auctionRoutes = require("./routes/auctionRoutes");
+
+// ─── Bid Routes ────────────────────────────────────────────────
+const bidRoutes = require("./routes/bidRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -23,7 +26,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ─── Mount Routes ──────────────────────────────────────────────
 app.use("/auth", authRoutes);       // existing authentication routes
-app.use("/auction", auctionRoutes); // new auction listing routes
+app.use("/auction", auctionRoutes); // auction listing routes
+app.use("/bids", bidRoutes);        // bid routes
+app.use("/api/feedback", require("./routes/feedbackRoutes")); // feedback routes
 
 app.listen(5000, () => {
     console.log("Server running on port 5000");

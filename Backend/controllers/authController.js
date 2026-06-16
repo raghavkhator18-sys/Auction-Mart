@@ -1,4 +1,4 @@
-const db = require("../db");
+const { usersDb: db } = require("../db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pendingUsers = require("../services/otpStore");

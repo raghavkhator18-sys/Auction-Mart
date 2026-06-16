@@ -2,7 +2,7 @@ import React from 'react';
 
 export const CardSkeleton: React.FC = () => {
   return (
-    <div role="status" aria-busy="true" aria-live="polite" className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm animate-pulse">
+    <div role="status" aria-busy="true" aria-live="polite" className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 overflow-hidden shadow-sm animate-pulse">
       <span className="sr-only">Loading content…</span>
       <div className="h-56 bg-gray-200 w-full" />
       <div className="p-5 space-y-3">
@@ -26,12 +26,12 @@ export const DashboardSkeleton: React.FC = () => {
       <span className="sr-only">Loading dashboard…</span>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-28 bg-white border border-gray-100 rounded-2xl p-6" />
+          <div key={i} className="h-28 bg-white dark:bg-slate-900 border border-gray-100 rounded-2xl p-6" />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 h-96 bg-white border border-gray-100 rounded-2xl" />
-        <div className="h-96 bg-white border border-gray-100 rounded-2xl" />
+        <div className="lg:col-span-2 h-96 bg-white dark:bg-slate-900 border border-gray-100 rounded-2xl" />
+        <div className="h-96 bg-white dark:bg-slate-900 border border-gray-100 rounded-2xl" />
       </div>
     </div>
   );

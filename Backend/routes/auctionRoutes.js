@@ -39,9 +39,9 @@ const {
 // ============================================================
 router.post(
     "/create",
-    // Multer processes the file before the controller runs
+    // Multer processes the files before the controller runs
     (req, res, next) => {
-        upload.single("image")(req, res, (err) => {
+        upload.array("images", 5)(req, res, (err) => {
             if (err) {
                 // Handle multer-specific errors (file size, wrong type, etc.)
                 return res.status(400).json({ message: err.message });

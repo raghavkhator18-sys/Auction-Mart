@@ -1,6 +1,13 @@
 import React from 'react';
 import { AuctionMartProvider } from '@/app/store';
+import { ThemeProvider } from '@/shared/theme';
 
 export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <AuctionMartProvider>{children}</AuctionMartProvider>;
+  return (
+    <ThemeProvider>
+      <AuctionMartProvider>
+        {children}
+      </AuctionMartProvider>
+    </ThemeProvider>
+  );
 };

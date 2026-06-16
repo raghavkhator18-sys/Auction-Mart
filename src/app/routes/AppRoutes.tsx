@@ -7,8 +7,8 @@ import { OtpVerificationPage } from '@/modules/auth/pages/OtpVerificationPage';
 import { ForgotPasswordPage } from '@/modules/auth/pages/ForgotPasswordPage';
 import { BrowseAuctions } from '@/modules/auctions/pages/BrowseAuctions';
 import { LandingHome } from '@/modules/auctions/pages/LandingHome';
-import { MyListings } from '@/modules/auctions/pages/MyListings';
-import { DashboardOverview } from '@/modules/analytics/pages/DashboardOverview';
+import { MyListings } from '@/modules/my-listings/pages/MyListings';
+import { DashboardOverview } from '@/modules/dashboard/pages/DashboardOverview';
 import { MyBids } from '@/modules/bids/pages/MyBids';
 import { ProductDetail } from '@/modules/products/pages/ProductDetail';
 import { ProductDetailRoute } from './ProductDetailRoute';
@@ -16,6 +16,8 @@ import { ProductDetailRoute } from './ProductDetailRoute';
 export const AppRoutes: React.FC = () => {
   const {
     auctions,
+    browseAuctions,
+    myListings,
     activities,
     users,
     favorites,
@@ -35,7 +37,7 @@ export const AppRoutes: React.FC = () => {
   } = useAuctionMart();
 
   if (isAuthLoading) {
-    return <div className="flex h-screen items-center justify-center bg-slate-50 text-slate-500 font-medium">Checking authentication...</div>;
+    return <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-medium">Checking authentication...</div>;
   }
 
   if (!session) {
@@ -93,7 +95,7 @@ export const AppRoutes: React.FC = () => {
         element={
           <div className="animate-in fade-in duration-350">
             <BrowseAuctions
-              auctions={auctions}
+              auctions={browseAuctions}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               favorites={favorites}
@@ -125,7 +127,7 @@ export const AppRoutes: React.FC = () => {
         element={
           <div className="animate-in fade-in duration-350">
             <MyListings
-              auctions={auctions}
+              auctions={myListings}
               onCreateListing={handleCreateListing}
               setCurrentScreen={setCurrentScreen}
               setSelectedProduct={setSelectedProduct}

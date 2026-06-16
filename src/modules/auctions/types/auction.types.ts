@@ -1,5 +1,6 @@
 export interface AuctionItem {
   id: string;
+  lot_number?: string;
   title: string;
   category: string;
   description: string;

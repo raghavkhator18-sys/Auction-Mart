@@ -8,7 +8,7 @@
 //   - deleteAuction       → DELETE /auction/:id
 // ============================================================
 
-const db = require("../db");
+const { auctionsDb: db } = require("../db");
 const fs = require("fs");
 const path = require("path");
 
@@ -22,6 +22,21 @@ function getImageFilePath(imagePath) {
     const relativePath = imagePath.replace(/^\//, "");
     // Build an absolute path from the Backend folder
     return path.join(__dirname, "..", relativePath);
+}
+
+// ============================================================
+// HELPER: Generate a unique Lot Number
+// ============================================================
+function generateLotNumber(category) {
+    let prefix = "AM";
+    if (category.toLowerCase().includes("watch")) prefix = "WA";
+    else if (category.toLowerCase().includes("tech") || category.toLowerCase().includes("electronic")) prefix = "TECH";
+    else if (category.toLowerCase().includes("auto")) prefix = "AUTO";
+    else if (category.toLowerCase().includes("collectible") || category.toLowerCase().includes("art")) prefix = "COL";
+    
+    // Generate 6-digit random number to ensure high uniqueness
+    const randomNum = Math.floor(100000 + Math.random() * 900000);
+    return `${prefix}-${randomNum}`;
 }
 
 // ============================================================
@@ -40,54 +55,50 @@ const createAuctionLot = (req, res) => {
         sku_reference,
         condition_status,
         description,
-        seller_email
+        seller_email,
+        seller_name,
+        duration,
+        status
     } = req.body;
 
     // --------------------------------------------------------
     // Step 2: Validate required fields
-    //         title, category, starting_price, and seller_email
-    //         are the minimum needed to create a listing.
     // --------------------------------------------------------
     if (!title || !category || !starting_price || !seller_email) {
-        // If an image was already uploaded but validation fails,
-        // delete the uploaded image to avoid orphan files.
-        if (req.file) {
-            fs.unlink(req.file.path, () => {});
+        if (req.files && req.files.length > 0) {
+            req.files.forEach(file => fs.unlink(file.path, () => {}));
         }
         return res.status(400).json({
             message: "title, category, starting_price, and seller_email are required."
         });
     }
 
-    // --------------------------------------------------------
-    // Step 3: Build the image_path to store in the database.
-    //         If no image was uploaded, store null.
-    //         We store the URL-accessible path like "/uploads/filename.jpg"
-    //         so the frontend can directly use it as an <img src="...">
-    // --------------------------------------------------------
-    const image_path = req.file
-        ? `/uploads/${req.file.filename}`
+    const image_path = req.files && req.files.length > 0
+        ? req.files.map(file => `/uploads/${file.filename}`).join(',')
         : null;
 
-    // --------------------------------------------------------
-    // Step 4: Insert the auction lot record into SQLite
-    // --------------------------------------------------------
+    const lot_number = generateLotNumber(category);
+
     const sql = `
         INSERT INTO auction_lots
-            (title, category, starting_price, sku_reference, condition_status, description, image_path, seller_email)
+            (lot_number, title, category, starting_price, sku_reference, condition_status, description, image_path, seller_email, seller_name, duration, status)
         VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
+        lot_number,
         title,
         category,
-        parseFloat(starting_price),   // ensure it's stored as a number
+        parseFloat(starting_price),
         sku_reference   || null,
         condition_status|| null,
         description     || null,
         image_path,
-        seller_email
+        seller_email,
+        seller_name     || null,
+        parseInt(duration) || 604800,
+        status          || 'active'
     ];
 
     db.run(sql, values, function (err) {
@@ -114,17 +125,7 @@ const createAuctionLot = (req, res) => {
 // ============================================================
 const getAllAuctions = (req, res) => {
     const sql = `
-        SELECT
-            id,
-            title,
-            category,
-            starting_price,
-            sku_reference,
-            condition_status,
-            image_path,
-            seller_email,
-            created_at
-        FROM auction_lots
+        SELECT * FROM auction_lots
         ORDER BY created_at DESC
     `;
 
@@ -132,8 +133,6 @@ const getAllAuctions = (req, res) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
-
-        // Return the array of auction lots (empty array if none exist)
         res.status(200).json(rows);
     });
 };
@@ -213,19 +212,18 @@ const deleteAuction = (req, res) => {
         }
 
         // --------------------------------------------------------
-        // Step 2: Delete the image file from the uploads folder
+        // Step 2: Delete the image files from the uploads folder
         //         Only attempt if an image_path was stored
         // --------------------------------------------------------
         if (row.image_path) {
-            const imageFilePath = getImageFilePath(row.image_path);
-
-            // fs.unlink removes the file — we use a callback but
-            // don't block the DB deletion even if file removal fails
-            fs.unlink(imageFilePath, (fileErr) => {
-                if (fileErr && fileErr.code !== "ENOENT") {
-                    // ENOENT means file was already missing — that's okay
-                    console.warn(`Warning: Could not delete image file: ${imageFilePath}`);
-                }
+            const paths = row.image_path.split(',');
+            paths.forEach((imgPath) => {
+                const imageFilePath = getImageFilePath(imgPath.trim());
+                fs.unlink(imageFilePath, (fileErr) => {
+                    if (fileErr && fileErr.code !== "ENOENT") {
+                        console.warn(`Warning: Could not delete image file: ${imageFilePath}`);
+                    }
+                });
             });
         }
 

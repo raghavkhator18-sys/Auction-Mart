@@ -8,8 +8,6 @@ export const mockAuctions: AuctionItem[] = [
     description: 'A high-end luxury mechanical watch with an intricate skeleton dial, showcasing golden gears and complex movements. Mint condition, boxed with papers.',
     sku: 'WA-9902',
     currentBid: 34250,
-    yourMaxBid: 36000,
-    yourBid: 34250,
     totalBids: 42,
     imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDevDKAQxS2pByG1MpmuQ05f3S96g6Icay09cHzcYCcs7yF5FAZxgh0Bl4f7ImbA0xcraxnceu0HTzi86ExeqpHzPgN3QNl6AQVUYrqC4lKskS7mONACQcDTNcXtU6xpLAv_w30j0a-4lyPQbMGc8JaUHyeR3sKGxznXDI7XOgeVUb0d3zaTyNz4vzrsSMtmG8v0Tr5eWnHcRYDZPbF1uFx9yOFJ6lqU5_vpsdWDiVP5ab0GvY2UCB4-I0jP8LYNSOYi5NDy0-VS5uV',
     timerSeconds: 18400,
@@ -70,7 +68,6 @@ export const mockAuctions: AuctionItem[] = [
     sellerRating: 4.9,
     sellerSales: 1240,
     sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
-    bidStatus: 'winning'
   },
   {
     id: 'ocean-diver',
@@ -88,7 +85,6 @@ export const mockAuctions: AuctionItem[] = [
     sellerRating: 4.7,
     sellerSales: 48,
     sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
-    bidStatus: 'none'
   },
   {
     id: 'titan-skeleton',
@@ -106,7 +102,6 @@ export const mockAuctions: AuctionItem[] = [
     sellerRating: 4.9,
     sellerSales: 219,
     sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
-    bidStatus: 'none'
   },
   {
     id: 'rose-gold',
@@ -124,7 +119,6 @@ export const mockAuctions: AuctionItem[] = [
     sellerRating: 4.8,
     sellerSales: 512,
     sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
-    bidStatus: 'none'
   },
   {
     id: 'stealth-tactical',
@@ -142,7 +136,6 @@ export const mockAuctions: AuctionItem[] = [
     sellerRating: 4.9,
     sellerSales: 219,
     sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
-    bidStatus: 'none'
   },
   {
     id: 'classic-gold',
@@ -160,7 +153,6 @@ export const mockAuctions: AuctionItem[] = [
     sellerRating: 4.8,
     sellerSales: 1105,
     sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
-    bidStatus: 'none'
   },
   {
     id: 'leica-m11',
@@ -203,8 +195,6 @@ export const mockAuctions: AuctionItem[] = [
     description: 'Heavy duty robotic arms for advanced enterprise mechanics and precise spatial programming. Fully verified setup.',
     sku: 'TECH-ROB-X1',
     currentBid: 41200,
-    yourMaxBid: 42500,
-    yourBid: 41200,
     totalBids: 14,
     imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBnWsl-pP4TR4t7DiSTkFkLiFEx13SQCBE4T8yoXQiNjG_0y4lFc0jeQFjNPOV3gfEU_TQCCxFc-H_3Ee1mfVDiUy5mToHswZFpwfnbJWhR7jhf0buQWjx9oVoVPQhQdBIt1k2QMvZ7hnA_TBT6cO7VijcYKm9k0utkVym3O4W7uHEPZitXk7tfqfIjK0e3FRXx6Z6kDzD-T2z5oS8E0vaDBVjzG0XqomDsixcREG9C24Nem4XP0v38r9Moa3nKTCplOiM_g86PNf6S',
     timerSeconds: 9900,
@@ -214,7 +204,6 @@ export const mockAuctions: AuctionItem[] = [
     sellerRating: 5.0,
     sellerSales: 82,
     sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
-    bidStatus: 'winning'
   },
   {
     id: 'leica-m3-suspect',

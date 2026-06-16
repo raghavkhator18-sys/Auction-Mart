@@ -9,7 +9,7 @@ export const AppLayout: React.FC = () => {
   const hideNavbar = location.pathname.startsWith('/auth') || location.pathname.startsWith('/verify-otp') || location.pathname.startsWith('/forgot-password');
 
   return (
-    <div id="app-root-container" className="min-h-screen bg-slate-50 flex flex-col justify-between">
+    <div id="app-root-container" className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col justify-between transition-colors duration-300">
       {!hideNavbar && <Navbar />}
       <main id="main-content-layout" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AppRoutes />
