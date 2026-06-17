@@ -30,6 +30,8 @@ app.use("/auction", auctionRoutes); // auction listing routes
 app.use("/bids", bidRoutes);        // bid routes
 app.use("/api/feedback", require("./routes/feedbackRoutes")); // feedback routes
 
-app.listen(5000, () => {
-    console.log("Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
