@@ -1,4 +1,3 @@
-<div align="center">
 
 # 🔨 AuctionMart
 
@@ -469,7 +468,3 @@ AuctionMartContext
 ├── Listing Actions  → handleCreateListing()
 ├── Admin Actions    → handleClearFlag(), handleModifyUserStatus()
 └── Simulation       → triggerBiddingWar()
-
-
-
-

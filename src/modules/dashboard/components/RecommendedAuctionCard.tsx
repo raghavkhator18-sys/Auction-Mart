@@ -1,6 +1,7 @@
 import React from 'react';
 import { AuctionItem, ScreenId } from '@/shared/types';
 import { formatCurrency } from '../utils/dashboardHelpers';
+import { getLotNumber } from '@/shared/utils/lotNumber';
 
 interface RecommendedAuctionCardProps {
   item: AuctionItem;
@@ -24,6 +25,9 @@ export const RecommendedAuctionCard: React.FC<RecommendedAuctionCardProps> = ({
       />
       <div className="flex-1 min-w-0 py-1 flex flex-col justify-between">
         <div>
+          <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold tracking-wider font-mono block mb-0.5">
+            {getLotNumber(item.id, item.sku)}
+          </span>
           <h4 className="text-sm font-semibold text-slate-900 dark:text-white leading-tight group-hover:text-indigo-600 transition-colors">
             {item.title}
           </h4>

@@ -21,17 +21,30 @@ export const OtpForm: React.FC<OtpFormProps> = ({
       )}
       
       <div className="space-y-1">
-        <label className="block text-[10px] font-bold text-slate-450 uppercase tracking-wide">Enter OTP</label>
+        <label className="block text-[10px] font-bold text-slate-450 uppercase tracking-wide">Enter Verification Code</label>
         <div className="relative">
           <span className="absolute left-3 top-2.5 text-slate-400"><ShieldCheck size={14} /></span>
           <input
             id="auth-otp-input"
             type="text"
             required
-            placeholder="Enter 4-digit OTP"
+            placeholder="Enter 4-digit code"
             maxLength={4}
             value={otp}
-            onChange={(e) => setOtp(e.target.value)}
+            onChange={(e) => {
+              e.target.setCustomValidity('');
+              setOtp(e.target.value);
+            }}
+            onInvalid={(e) => {
+              const target = e.target as HTMLInputElement;
+              if (target.validity.valueMissing) {
+                target.setCustomValidity('Please enter the 4-digit verification code sent to your email.');
+              } else if (target.value.length < 4) {
+                target.setCustomValidity('Verification code must contain 4 digits.');
+              } else {
+                target.setCustomValidity('');
+              }
+            }}
             className="w-full text-xs pl-8 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50"
           />
         </div>

@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const pendingUsers = require("../services/otpStore");
 const pendingResets = require("../services/resetStore");
 const { generateOTP } = require("../services/otpServices");
+const { sendOTPEmail } = require("../services/emailService");
 
 const JWT_SECRET = process.env.JWT_SECRET || "auctionmart_secret_key";
 
@@ -20,7 +21,16 @@ const registerUser = (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
-        const expiresAt = Date.now() + 5 * 60 * 1000;
+        const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+        // Send OTP via email before storing the pending user
+        try {
+            await sendOTPEmail(email, otp);
+        } catch (emailErr) {
+            return res.status(500).json({
+                message: "Failed to send verification email. Please try again."
+            });
+        }
 
         pendingUsers[email] = {
             name,
@@ -30,16 +40,8 @@ const registerUser = (req, res) => {
             expiresAt
         };
 
-        console.log(`\n====================================`);
-        console.log(`NEW USER REGISTRATION`);
-        console.log(`====================================`);
-        console.log(`Name  : ${name}`);
-        console.log(`Email : ${email}`);
-        console.log(`OTP   : ${otp}`);
-        console.log(`====================================\n`);
-
         res.status(200).json({
-            message: "OTP generated successfully"
+            message: "OTP sent to your email address."
         });
     });
 };
@@ -57,12 +59,12 @@ const verifyOTP = (req, res) => {
 
     if (Date.now() > user.expiresAt) {
         delete pendingUsers[email];
-        return res.status(400).json({ message: "OTP has expired." });
+        return res.status(400).json({ message: "Verification code expired. Request a new code." });
     }
 
     if (user.otp !== otp) {
         return res.status(400).json({
-            message: "Invalid OTP."
+            message: "Incorrect verification code. Please try again."
         });
     }
 
@@ -150,7 +152,7 @@ const forgotPassword = (req, res) => {
     const { email } = req.body;
 
     // Check if email exists in the users table
-    db.get("SELECT email FROM users WHERE email = ?", [email], (err, row) => {
+    db.get("SELECT email FROM users WHERE email = ?", [email], async (err, row) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
@@ -163,7 +165,16 @@ const forgotPassword = (req, res) => {
 
         // Generate a 4-digit OTP using the existing service
         const otp = generateOTP();
-        const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
+        const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+        // Send OTP via email before storing the reset session
+        try {
+            await sendOTPEmail(email, otp);
+        } catch (emailErr) {
+            return res.status(500).json({
+                message: "Failed to send verification email. Please try again."
+            });
+        }
 
         // Store the reset session separately from signup sessions
         pendingResets[email] = {
@@ -172,16 +183,8 @@ const forgotPassword = (req, res) => {
             verified: false
         };
 
-        // Display OTP in backend terminal (dev mode — no email sending)
-        console.log(`\n====================================`);
-        console.log(`PASSWORD RESET REQUEST`);
-        console.log(`====================================`);
-        console.log(`Email : ${email}`);
-        console.log(`OTP   : ${otp}`);
-        console.log(`====================================\n`);
-
         res.status(200).json({
-            message: "OTP sent successfully. Check your terminal."
+            message: "OTP sent to your email address."
         });
     });
 };
@@ -203,14 +206,14 @@ const verifyResetOTP = (req, res) => {
     if (Date.now() > resetSession.expiresAt) {
         delete pendingResets[email];
         return res.status(400).json({
-            message: "OTP has expired. Please request a new one."
+            message: "Verification code expired. Request a new code."
         });
     }
 
     // Check if the OTP matches
     if (resetSession.otp !== otp) {
         return res.status(400).json({
-            message: "Invalid OTP. Please try again."
+            message: "Incorrect verification code. Please try again."
         });
     }
 

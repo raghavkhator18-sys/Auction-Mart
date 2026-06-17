@@ -106,7 +106,7 @@ export const ForgotPasswordPage: React.FC = () => {
     otp: {
       icon: <ShieldCheck size={24} />,
       title: 'Verify Identity',
-      subtitle: 'Check the backend terminal for your 4-digit OTP and enter it below.'
+      subtitle: 'Check your email inbox for your 4-digit verification code and enter it below.'
     },
     'new-password': {
       icon: <Lock size={24} />,

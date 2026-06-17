@@ -1,6 +1,7 @@
 import React from 'react';
 import { AuctionItem, ScreenId } from '@/shared/types';
 import { formatCurrency, getTimeRemaining } from '../utils/dashboardHelpers';
+import { getLotNumber } from '@/shared/utils/lotNumber';
 
 interface ActiveWinningAuctionCardProps {
   item: AuctionItem;
@@ -27,6 +28,9 @@ export const ActiveWinningAuctionCard: React.FC<ActiveWinningAuctionCardProps> =
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start">
           <div>
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold tracking-wider font-mono block mb-0.5">
+              {getLotNumber(item.id, item.sku)}
+            </span>
             <h4 className="font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">
               {item.title}
             </h4>

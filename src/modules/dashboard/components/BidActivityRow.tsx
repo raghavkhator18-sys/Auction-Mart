@@ -1,6 +1,7 @@
 import React from 'react';
 import { RecentActivity } from '@/shared/types';
 import { formatCurrency } from '../utils/dashboardHelpers';
+import { getLotNumber } from '@/shared/utils/lotNumber';
 
 interface BidActivityRowProps {
   activity: RecentActivity;
@@ -16,6 +17,9 @@ export const BidActivityRow: React.FC<BidActivityRowProps> = ({ activity }) => {
       />
       
       <div className="flex-1 min-w-0">
+        <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold tracking-wider font-mono block mb-0.5">
+          {getLotNumber(activity.id)}
+        </span>
         <h4 className="text-sm font-semibold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 transition-colors">
           {activity.title}
         </h4>

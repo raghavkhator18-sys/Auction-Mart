@@ -1,5 +1,6 @@
 import React from 'react';
 import { AuctionItem } from '@/shared/types';
+import { getLotNumber } from '@/shared/utils/lotNumber';
 
 interface BidCardProps {
   item: AuctionItem;
@@ -50,7 +51,8 @@ export const BidCard: React.FC<BidCardProps> = ({
       {/* Content */}
       <div className="p-5 flex-1 flex flex-col justify-between space-y-4 font-sans">
         <div className="space-y-1">
-          <div className="flex justify-end text-[10px] text-slate-400 font-mono font-medium">
+          <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono font-medium">
+            <span className="text-blue-600 dark:text-blue-400 font-bold tracking-wider">{getLotNumber(item.id, item.sku)}</span>
             <span>Total bids: {item.totalBids}</span>
           </div>
           <h3 onClick={() => handleCardTitleClick(item)} className="text-sm font-black text-slate-900 dark:text-white hover:text-blue-600 cursor-pointer truncate">

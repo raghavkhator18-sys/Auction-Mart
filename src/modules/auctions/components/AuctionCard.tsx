@@ -2,6 +2,7 @@ import React from 'react';
 import { Heart, Clock } from 'lucide-react';
 import { AuctionItem } from '@/shared/types';
 import { useAuctionTimer } from '../hooks/useAuctionTimer';
+import { getLotNumber } from '@/shared/utils/lotNumber';
 
 interface AuctionCardProps {
   item: AuctionItem;
@@ -62,7 +63,7 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 font-medium">
-              LOT #{item.lot_number || item.id.split('-')[1]?.toUpperCase() || 'AM-0001'}
+              {getLotNumber(item.id, item.lot_number || item.sku)}
             </span>
             <span className="text-[10px] bg-blue-50 text-blue-700 font-extrabold px-1.5 py-0.5 rounded">
               {item.condition}
