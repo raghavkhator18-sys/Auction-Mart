@@ -5,13 +5,13 @@ export const screenToPath = (s: ScreenId): string => {
     case 'home':
       return '/';
     case 'browse':
-      return '/browse';
+      return '/browse-auctions';
     case 'dashboard':
       return '/dashboard';
     case 'listings':
-      return '/listings';
+      return '/my-listings';
     case 'bids':
-      return '/bids';
+      return '/my-bids';
     case 'product-detail':
       return '/product-detail';
     case 'admin':
@@ -25,10 +25,10 @@ export const screenToPath = (s: ScreenId): string => {
 
 export const pathToScreen = (path: string): ScreenId => {
   if (path === '/' || path === '') return 'home';
-  if (path.startsWith('/browse')) return 'browse';
+  if (path.startsWith('/browse-auctions') || path.startsWith('/browse')) return 'browse';
   if (path.startsWith('/dashboard')) return 'dashboard';
-  if (path.startsWith('/listings')) return 'listings';
-  if (path.startsWith('/bids')) return 'bids';
+  if (path.startsWith('/my-listings') || path.startsWith('/listings')) return 'listings';
+  if (path.startsWith('/my-bids') || path.startsWith('/bids')) return 'bids';
   if (path.startsWith('/product-detail')) return 'product-detail';
   if (path.startsWith('/admin')) return 'admin';
   if (path.startsWith('/auth')) return 'auth';

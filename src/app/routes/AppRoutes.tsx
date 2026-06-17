@@ -91,7 +91,7 @@ export const AppRoutes: React.FC = () => {
       />
 
       <Route
-        path="/browse"
+        path="/browse-auctions"
         element={
           <div className="animate-in fade-in duration-350">
             <BrowseAuctions
@@ -106,6 +106,7 @@ export const AppRoutes: React.FC = () => {
           </div>
         }
       />
+      <Route path="/browse" element={<Navigate to="/browse-auctions" replace />} />
 
       <Route
         path="/dashboard"
@@ -123,7 +124,7 @@ export const AppRoutes: React.FC = () => {
       />
 
       <Route
-        path="/listings"
+        path="/my-listings"
         element={
           <div className="animate-in fade-in duration-350">
             <MyListings
@@ -135,9 +136,10 @@ export const AppRoutes: React.FC = () => {
           </div>
         }
       />
+      <Route path="/listings" element={<Navigate to="/my-listings" replace />} />
 
       <Route
-        path="/bids"
+        path="/my-bids"
         element={
           <div className="animate-in fade-in duration-350">
             <MyBids
@@ -149,6 +151,7 @@ export const AppRoutes: React.FC = () => {
           </div>
         }
       />
+      <Route path="/bids" element={<Navigate to="/my-bids" replace />} />
 
       <Route
         path="/product-detail"
