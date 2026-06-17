@@ -53,7 +53,7 @@ export const FeaturedAuctions: React.FC<FeaturedAuctionsProps> = ({
               className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col justify-between"
             >
               {/* Image & Badges */}
-              <div className="relative h-56 overflow-hidden bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 shrink-0">
+              <div className="relative h-48 sm:h-56 overflow-hidden bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 shrink-0">
                 <img
                   src={item.imageUrl}
                   alt={item.title}

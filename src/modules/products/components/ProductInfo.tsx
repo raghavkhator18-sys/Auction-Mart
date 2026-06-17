@@ -26,14 +26,14 @@ export const ProductInfo: React.FC<ProductInfoProps> = ({ item }) => {
       </div>
 
       {/* Live countdown badge block */}
-      <div className="bg-blue-50/40 border border-blue-100 rounded-2xl p-5 grid grid-cols-2 gap-4 divide-x divide-blue-200/50">
+      <div className="bg-blue-50/40 border border-blue-100 rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:divide-x divide-blue-200/50">
         <div>
           <span className="text-[9px] text-blue-800 font-bold uppercase tracking-wider block">AUCTION STATUS</span>
           <span className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 mt-1">
             <Clock size={16} className="text-blue-600 animate-pulse" /> Live Room
           </span>
         </div>
-        <div className="pl-5">
+        <div className="sm:pl-5 pt-2 sm:pt-0 border-t sm:border-t-0 border-blue-200/50 sm:border-transparent">
           <span className="text-[9px] text-blue-800 font-bold uppercase tracking-wider block">CLOSING TIMER</span>
           <span className="text-lg font-mono font-black text-blue-600 tracking-tight mt-1 inline-block">
             {formatTimer(item.timerSeconds)}
@@ -42,12 +42,12 @@ export const ProductInfo: React.FC<ProductInfoProps> = ({ item }) => {
       </div>
 
       {/* Price telemetry and Bids statistics */}
-      <div className="p-5 border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-between gap-4 shadow-sm">
+      <div className="p-5 border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
         <div>
           <span className="text-[10px] text-slate-450 font-semibold block uppercase">CURRENT HIGHEST BID</span>
           <span className="text-3xl font-black text-blue-600">₹{item.currentBid.toLocaleString()}</span>
         </div>
-        <div className="text-right">
+        <div className="sm:text-right">
           <span className="text-[10px] text-slate-455 text-slate-400 font-semibold block uppercase">LEDGER TRAFFIC</span>
           <span className="text-lg font-extrabold text-slate-900 dark:text-white">{item.totalBids} bids recorded</span>
         </div>

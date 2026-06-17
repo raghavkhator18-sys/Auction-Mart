@@ -88,27 +88,29 @@ export const Navbar: React.FC = () => {
               <p className="text-[9px] text-slate-400 -mt-1 tracking-widest uppercase font-semibold">BIDDING HUB</p>
             </div>
           </div>
-          <nav className="hidden lg:flex items-center gap-1">
-            {navigationItems.map((item) => {
-              const isActive = currentScreen === item.id;
-              return (
-                <button
-                  id={`nav-link-${item.id}`}
-                  key={item.id}
-                  onClick={() => {
-                    setCurrentScreen(item.id);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${isActive
-                    ? 'text-blue-600 bg-blue-50 font-semibold dark:bg-slate-800/50 dark:text-blue-400'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
-                    }`}
-                >
-                  {item.name}
-                </button>
-              );
-            })}
-          </nav>
+          <div className="hidden lg:flex items-center gap-4 flex-1 ml-8 max-w-xl">
+            <nav className="flex items-center gap-1">
+              {navigationItems.map((item) => {
+                const isActive = currentScreen === item.id;
+                return (
+                  <button
+                    id={`nav-link-${item.id}`}
+                    key={item.id}
+                    onClick={() => {
+                      setCurrentScreen(item.id);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${isActive
+                      ? 'text-blue-600 bg-blue-50 font-semibold dark:bg-slate-800/50 dark:text-blue-400'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
+                      }`}
+                  >
+                    {item.name}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
 
           <div className="flex items-center gap-3">
             <button
@@ -246,41 +248,89 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
+      {/* Mobile Menu Drawer Overlay */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-lg px-4 pt-2 pb-4 space-y-3 transition-colors duration-300">
-          <div className="relative w-full">
-            <input
-              id="mobile-search-input"
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchKeyPress}
-              className="w-full text-xs pl-8 pr-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-            />
-            <Search size={14} className="absolute left-2.5 top-3 text-slate-400" />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            {navigationItems.map((item) => (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" 
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* Drawer content */}
+          <div className="relative ml-auto flex h-full w-full max-w-xs flex-col bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl py-6 px-4 pb-12 overflow-y-auto animate-in slide-in-from-right-full duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white transition-colors duration-300">
+                Menu
+              </span>
               <button
-                id={`mobile-nav-link-${item.id}`}
-                key={item.id}
-                onClick={() => {
-                  setCurrentScreen(item.id);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${currentScreen === item.id
-                  ? 'text-blue-600 bg-blue-50 dark:bg-slate-800/50 dark:text-blue-400'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800'
-                  }`}
+                type="button"
+                className="p-2 text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
               >
-                {item.name}
+                <X size={20} />
               </button>
-            ))}
+            </div>
+
+            <div className="relative w-full mb-6">
+              <input
+                id="mobile-search-input"
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  handleSearchKeyPress(e);
+                  if (e.key === 'Enter') setIsMobileMenuOpen(false);
+                }}
+                className="w-full text-xs pl-8 pr-4 py-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+              />
+              <Search size={14} className="absolute left-3 top-3.5 text-slate-400" />
+            </div>
+
+            <div className="flex flex-col gap-1.5 flex-1">
+              {navigationItems.map((item) => (
+                <button
+                  id={`mobile-nav-link-${item.id}`}
+                  key={item.id}
+                  onClick={() => {
+                    setCurrentScreen(item.id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 text-sm font-semibold rounded-xl transition-all cursor-pointer ${currentScreen === item.id
+                    ? 'text-blue-600 bg-blue-50 dark:bg-slate-800 dark:text-blue-400'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/50'
+                    }`}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+            
+            <div className="mt-8 border-t border-slate-200 dark:border-slate-800 pt-6">
+              <div className="flex items-center gap-3 mb-6">
+                <img
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC52XPX68f7szipt695KhrDJcnIhxiHn0yR4ZoBwVs-3gBxPlSBfgYyK1Ndjgj3Ab9sr6McYjjpoIomk14ByO6O7NQUBj4mD-nf7at2S0a-l0q9ZNbvRp8wtwBCIGYxnJnnBouDrRKkqy6J-QYf_IGa6b8Th3fnxP8PVmCHtj2m_evcHpIqgHzdCNGmQPIfCTpWhHmZuNS8iQZBgjyNNvXY0vztyxP0o2GNwVSSBKBHFQyYLTtEhYbx1tv8d4DPgGgv583VbykPoOOW"
+                  alt={`${currentUser?.name || 'User'} Avatar`}
+                  referrerPolicy="no-referrer"
+                  className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                />
+                <div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{currentUser?.name || 'User'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{currentUser?.email || ''}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  logout();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm font-semibold"
+              >
+                <LogOut size={16} /> Log Out
+              </button>
+            </div>
           </div>
-
-
         </div>
       )}
     </header>

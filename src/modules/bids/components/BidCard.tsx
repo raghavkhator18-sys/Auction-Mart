@@ -26,7 +26,7 @@ export const BidCard: React.FC<BidCardProps> = ({
       className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
     >
       {/* Visual Image & Bidding leading status overlay banner */}
-      <div className="relative h-48 overflow-hidden bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 shrink-0">
+      <div className="relative h-40 sm:h-48 overflow-hidden bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 shrink-0">
         <img
           src={item.imageUrl}
           alt={item.title}

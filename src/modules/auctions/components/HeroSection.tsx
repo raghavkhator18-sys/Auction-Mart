@@ -17,7 +17,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   return (
-    <section className="relative overflow-hidden bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl py-12 md:py-20 px-6 sm:px-12 shadow-sm border border-slate-200 dark:border-slate-700">
+    <section className="relative overflow-hidden bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl sm:rounded-3xl py-10 md:py-20 px-5 sm:px-12 shadow-sm border border-slate-200 dark:border-slate-700">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(37,99,235,0.05),transparent)] pointer-events-none" />
 
       <div className="relative z-10 max-w-2xl space-y-6">

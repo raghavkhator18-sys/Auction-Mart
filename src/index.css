@@ -7,3 +7,14 @@
 }
 
 @custom-variant dark (&:is(.dark *));
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+}

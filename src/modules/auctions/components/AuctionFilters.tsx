@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Search, SlidersHorizontal, RotateCcw, Grid2X2, Tag, IndianRupee, Clock3 } from 'lucide-react';
 import { CATEGORIES, DURATION_OPTIONS } from '../../my-listings/constants/listingConstants';
 
@@ -27,25 +27,41 @@ export const AuctionFilters: React.FC<AuctionFiltersProps> = ({
   selectedDuration, setSelectedDuration,
   resetFilters
 }) => {
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 space-y-6 sticky top-20 shadow-sm">
-      <div className="flex flex-col gap-2 pb-4 border-b border-slate-150 dark:border-slate-700/50">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-            <SlidersHorizontal size={16} className="text-blue-600" /> Auction Filters
-          </span>
-          <button
-            id="reset-filter-side-btn"
-            onClick={resetFilters}
-            className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-blue-600 font-bold flex items-center gap-1 cursor-pointer transition-colors bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 hover:bg-blue-50 px-2 py-1 rounded-md"
-          >
-            <RotateCcw size={12} /> Reset Filters
-          </button>
-        </div>
-        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-          Find auctions based on category, condition, bid range, and duration.
-        </p>
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm lg:sticky lg:top-20">
+      {/* Mobile Toggle */}
+      <div className="flex lg:hidden justify-between items-center mb-2">
+        <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+          <SlidersHorizontal size={16} className="text-blue-600" /> Filters
+        </span>
+        <button
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
+          className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg transition-colors"
+        >
+          {isMobileOpen ? 'Hide Filters' : 'Show Filters'}
+        </button>
       </div>
+
+      <div className={`space-y-6 mt-4 lg:mt-0 ${isMobileOpen ? 'block' : 'hidden lg:block'}`}>
+        <div className="flex flex-col gap-2 pb-4 border-b border-slate-150 dark:border-slate-700/50">
+          <div className="flex justify-between items-center">
+            <span className="hidden lg:flex text-sm font-bold text-slate-900 dark:text-white items-center gap-1.5">
+              <SlidersHorizontal size={16} className="text-blue-600" /> Auction Filters
+            </span>
+            <button
+              id="reset-filter-side-btn"
+              onClick={resetFilters}
+              className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-blue-600 font-bold flex items-center gap-1 cursor-pointer transition-colors bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50 px-2 py-1 rounded-md ml-auto lg:ml-0"
+            >
+              <RotateCcw size={12} /> Reset Filters
+            </button>
+          </div>
+          <p className="hidden lg:block text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+            Find auctions based on category, condition, bid range, and duration.
+          </p>
+        </div>
 
       {/* 1. Product Name */}
       <div className="space-y-2">
@@ -56,7 +72,7 @@ export const AuctionFilters: React.FC<AuctionFiltersProps> = ({
           <input
             id="side-search-input"
             type="text"
-            placeholder="Search by title or SKU..."
+            placeholder="Search by title or Ref..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full text-xs pl-8 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600 text-slate-900 dark:text-white bg-white dark:bg-slate-900"
@@ -156,6 +172,7 @@ export const AuctionFilters: React.FC<AuctionFiltersProps> = ({
         </select>
       </div>
 
+      </div>
     </div>
   );
 };
