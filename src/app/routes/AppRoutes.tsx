@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuctionMart } from '@/app/store';
 import { AdminDashboard } from '@/modules/admin/pages/AdminDashboard';
 import { AuthPage } from '@/modules/auth/pages/AuthPage';
@@ -13,6 +13,7 @@ import { ProductDetail } from '@/modules/products/pages/ProductDetail';
 import { ProductDetailRoute } from './ProductDetailRoute';
 
 export const AppRoutes: React.FC = () => {
+  const location = useLocation();
   const {
     auctions,
     browseAuctions,
@@ -37,6 +38,22 @@ export const AppRoutes: React.FC = () => {
 
   if (isAuthLoading) {
     return <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-medium">Checking authentication...</div>;
+  }
+
+  if (location.pathname.startsWith('/forgot-password')) {
+    return (
+      <Routes>
+        <Route
+          path="/forgot-password"
+          element={
+            <div className="animate-in fade-in duration-350">
+              <ForgotPasswordPage />
+            </div>
+          }
+        />
+        <Route path="*" element={<Navigate to="/forgot-password" replace />} />
+      </Routes>
+    );
   }
 
   if (!session) {

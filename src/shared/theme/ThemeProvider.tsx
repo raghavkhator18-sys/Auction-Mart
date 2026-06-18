@@ -4,16 +4,17 @@ import { ThemeContext } from './ThemeContext';
 
 const THEME_STORAGE_KEY = 'auctionmart-theme';
 
+const getSystemTheme = () =>
+  window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    // 1. Check local storage
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-    if (savedTheme === 'light' || savedTheme === 'dark') {
+    if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
       return savedTheme;
     }
     
-    // 2. Default to light
-    return 'light';
+    return 'system';
   });
 
   const setTheme = (newTheme: Theme) => {
@@ -22,18 +23,29 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   useEffect(() => {
-    const root = window.document.documentElement;
+    const applyTheme = () => {
+      const root = window.document.documentElement;
+      const resolvedTheme = theme === 'system' ? getSystemTheme() : theme;
     
-    // Remove both classes to prevent conflicts
-    root.classList.remove('light', 'dark');
+      root.classList.remove('light', 'dark');
     
-    // Add the current theme class
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    }
+      if (resolvedTheme === 'dark') {
+        root.classList.add('dark');
+      }
     
-    // Add a transition class to body for smooth color transitions
-    document.body.classList.add('transition-colors', 'duration-300');
+      document.body.classList.add('transition-colors', 'duration-300');
+    };
+
+    applyTheme();
+
+    if (theme !== 'system') return;
+
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+    systemTheme.addEventListener('change', applyTheme);
+
+    return () => {
+      systemTheme.removeEventListener('change', applyTheme);
+    };
   }, [theme]);
 
   return (

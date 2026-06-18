@@ -4,7 +4,7 @@
 ## 📖 Project Overview
 
 AuctionMart is a full-stack online auction platform that enables users to:
-* Register and verify accounts through Email OTP
+* Register and verify accounts through Supabase email confirmation
 * Create auction listings
 * Upload product images
 * Browse active auctions
@@ -37,10 +37,8 @@ The platform combines a modern React frontend with an Express.js backend and SQL
 |------------      |---------|
 | **Node.js**      | Runtime Environment |
 | **Express.js**   | REST API |
-| **JWT**          | Authentication |
-| **Nodemailer**   | Email OTP |
+| **Supabase Auth**| Authentication and password recovery |
 | **Multer**       | Image Uploads |
-| **bcryptjs**     | Password Hashing |
 | **CORS**         | API Security |
 | **dotenv**       | Environment Variables |
 
@@ -56,10 +54,10 @@ The platform combines a modern React frontend with an Express.js backend and SQL
 ### 🔐 Authentication
 * User Registration
 * Login System
-* JWT Authentication
-* Email OTP Verification
+* Supabase Authentication
+* Supabase Email Confirmation
+* Supabase Password Recovery
 * Protected Routes
-* Password Hashing
 
 ### 🏷️ Auction System
 * Browse Auctions
@@ -138,7 +136,6 @@ graph TD
     Backend --> DB
     
     subgraph DB [SQLite Database]
-        UsersDB[(Users)]
         ListingsDB[(Listings)]
         AuctionsDB[(Auctions)]
         BidsDB[(Bids)]
@@ -154,11 +151,11 @@ graph TD
 ### Authentication Flow
 ```mermaid
 graph LR
-    Register --> OTP[Generate OTP]
-    OTP --> Email[Send OTP Email]
-    Email --> Verify[Verify OTP]
-    Verify --> JWT[Generate JWT]
-    JWT --> Access[Access Protected Routes]
+    Register --> Supabase[Supabase signUp]
+    Supabase --> Email[Send confirmation email]
+    Email --> Confirm[Confirm account]
+    Confirm --> Login[Sign in with password]
+    Login --> Access[Access Protected Routes]
 ```
 
 ### Create Listing Flow
@@ -228,9 +225,9 @@ Backend/
 
 ## 🛡️ Security Features
 
-* **JWT Authentication:** Secure token-based access.
-* **Password Hashing:** Robust protection using bcryptjs.
-* **Email Verification:** Account validation through Nodemailer OTPs.
+* **Supabase Authentication:** Secure account access and session handling.
+* **Email Verification:** Account confirmation through Supabase email confirmation.
+* **Password Recovery:** Reset links and passkey updates through Supabase Auth.
 * **Input Validation:** Thorough checking of incoming requests.
 * **Protected Routes:** Both client-side and server-side route guarding.
 * **Secure File Upload:** Safe image handling with Multer.

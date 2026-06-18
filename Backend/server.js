@@ -6,27 +6,22 @@ const cors = require("cors");
 
 const app = express();
 
-// ─── Existing Auth Routes (do not modify) ─────────────────────
-
-// ─── New Auction Routes ────────────────────────────────────────
+// Auction routes
 const auctionRoutes = require("./routes/auctionRoutes");
 
-// ─── Bid Routes ────────────────────────────────────────────────
+// Bid routes
 const bidRoutes = require("./routes/bidRoutes");
 
 app.use(cors());
 app.use(express.json());
 
-// ─── Serve uploaded images as static files ─────────────────────
-// Any request to /uploads/filename.jpg will serve the file
-// directly from the "uploads" folder on disk.
-// Example: http://localhost:5000/uploads/1718392039-watch.jpg
+// Serve uploaded images as static files.
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ─── Mount Routes ──────────────────────────────────────────────
-app.use("/auction", auctionRoutes); // auction listing routes
-app.use("/bids", bidRoutes);        // bid routes
-app.use("/api/feedback", require("./routes/feedbackRoutes")); // feedback routes
+// Mount routes
+app.use("/auction", auctionRoutes);
+app.use("/bids", bidRoutes);
+app.use("/api/feedback", require("./routes/feedbackRoutes"));
 
 const PORT = process.env.PORT || 5000;
 

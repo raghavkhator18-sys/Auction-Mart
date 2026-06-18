@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { AuthHeader } from '../components/AuthHeader';
 import { AuthSuccessState } from '../components/AuthSuccessState';
 import { AuthForm } from '../components/AuthForm';
+import { getFriendlyAuthError } from '../utils/authErrorMessages';
 
 interface AuthPageProps {
   setCurrentScreen: (screen: ScreenId) => void;
@@ -70,7 +71,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         }, 1500);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Authentication failed');
+      setErrorMsg(getFriendlyAuthError(err, 'Authentication failed. Please try again.'));
     } finally {
       setLoading(false);
     }

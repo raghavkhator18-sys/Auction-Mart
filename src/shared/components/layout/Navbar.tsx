@@ -10,7 +10,9 @@ import {
   Landmark,
   CheckCircle,
   Sun,
-  Moon
+  Moon,
+  Monitor,
+  UserCircle
 } from 'lucide-react';
 import { useAuctionMart } from '@/app/store';
 import { useTheme } from '@/shared/theme';
@@ -72,6 +74,11 @@ export const Navbar: React.FC = () => {
   };
 
   const favoritesCount = favorites.length;
+  const themeOptions = [
+    { value: 'light' as const, label: 'Light Mode', shortLabel: 'Light', icon: Sun },
+    { value: 'dark' as const, label: 'Dark Mode', shortLabel: 'Dark', icon: Moon },
+    { value: 'system' as const, label: 'System Default', shortLabel: 'System', icon: Monitor }
+  ];
 
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs transition-colors duration-300">
@@ -112,7 +119,7 @@ export const Navbar: React.FC = () => {
             </nav>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               id="fav-shortcut-btn"
               onClick={() => {
@@ -141,18 +148,15 @@ export const Navbar: React.FC = () => {
 
 
 
-            <div className="relative">
+            <div className="relative hidden lg:block">
               <button
                 id="profile-dropdown-btn"
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                 className="flex items-center gap-1.5 focus:outline-hidden p-1 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
-                <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC52XPX68f7szipt695KhrDJcnIhxiHn0yR4ZoBwVs-3gBxPlSBfgYyK1Ndjgj3Ab9sr6McYjjpoIomk14ByO6O7NQUBj4mD-nf7at2S0a-l0q9ZNbvRp8wtwBCIGYxnJnnBouDrRKkqy6J-QYf_IGa6b8Th3fnxP8PVmCHtj2m_evcHpIqgHzdCNGmQPIfCTpWhHmZuNS8iQZBgjyNNvXY0vztyxP0o2GNwVSSBKBHFQyYLTtEhYbx1tv8d4DPgGgv583VbykPoOOW"
-                  alt={`${currentUser?.name || 'User'} Avatar`}
-                  referrerPolicy="no-referrer"
-                  className="w-8 h-8 rounded-full object-cover border border-slate-200"
-                />
+                <span className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-300">
+                  <UserCircle size={20} />
+                </span>
               </button>
 
               {isProfileDropdownOpen && (
@@ -194,19 +198,16 @@ export const Navbar: React.FC = () => {
                     
                     <div className="px-4 py-2 mt-1 border-t border-slate-100 dark:border-slate-800">
                       <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">Appearance</p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setTheme('light')}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${theme === 'light' ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                        >
-                          <Sun size={12} /> Light
-                        </button>
-                        <button
-                          onClick={() => setTheme('dark')}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${theme === 'dark' ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                        >
-                          <Moon size={12} /> Dark
-                        </button>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {themeOptions.map(({ value, shortLabel, icon: Icon }) => (
+                          <button
+                            key={value}
+                            onClick={() => setTheme(value)}
+                            className={`flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${theme === value ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                          >
+                            <Icon size={12} /> {shortLabel}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
@@ -305,19 +306,37 @@ export const Navbar: React.FC = () => {
                   {item.name}
                 </button>
               ))}
+              <div className="mt-4 border-t border-slate-200 dark:border-slate-800 pt-4">
+                <p className="px-4 text-[10px] uppercase font-bold text-slate-400 mb-2">Appearance</p>
+                <div className="flex flex-col gap-1.5">
+                  {themeOptions.map(({ value, label, icon: Icon }) => (
+                    <button
+                      id={`mobile-theme-${value}`}
+                      key={value}
+                      onClick={() => setTheme(value)}
+                      className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all cursor-pointer ${theme === value
+                        ? 'text-blue-600 bg-blue-50 dark:bg-slate-800 dark:text-blue-400'
+                        : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/50'
+                        }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Icon size={16} /> {label}
+                      </span>
+                      {theme === value && <CheckCircle size={14} className="text-blue-600 dark:text-blue-400" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             
             <div className="mt-8 border-t border-slate-200 dark:border-slate-800 pt-6">
-              <div className="flex items-center gap-3 mb-6">
-                <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC52XPX68f7szipt695KhrDJcnIhxiHn0yR4ZoBwVs-3gBxPlSBfgYyK1Ndjgj3Ab9sr6McYjjpoIomk14ByO6O7NQUBj4mD-nf7at2S0a-l0q9ZNbvRp8wtwBCIGYxnJnnBouDrRKkqy6J-QYf_IGa6b8Th3fnxP8PVmCHtj2m_evcHpIqgHzdCNGmQPIfCTpWhHmZuNS8iQZBgjyNNvXY0vztyxP0o2GNwVSSBKBHFQyYLTtEhYbx1tv8d4DPgGgv583VbykPoOOW"
-                  alt={`${currentUser?.name || 'User'} Avatar`}
-                  referrerPolicy="no-referrer"
-                  className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700"
-                />
-                <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{currentUser?.name || 'User'}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{currentUser?.email || ''}</p>
+              <div className="flex items-center gap-3 mb-6 min-w-0">
+                <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex shrink-0 items-center justify-center text-slate-500 dark:text-slate-300">
+                  <UserCircle size={22} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{currentUser?.name || 'User'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{currentUser?.email || ''}</p>
                 </div>
               </div>
               <button

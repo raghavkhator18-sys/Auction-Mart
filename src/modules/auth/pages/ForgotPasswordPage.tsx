@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, KeyRound } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -6,16 +6,43 @@ import { supabase } from '@/lib/supabase';
 import { AuthHeader } from '../components/AuthHeader';
 import { AuthSuccessState } from '../components/AuthSuccessState';
 import { ForgotPasswordForm } from '../components/ForgotPasswordForm';
+import { getFriendlyAuthError } from '../utils/authErrorMessages';
 
-type ResetStep = 'email' | 'success';
+type ResetStep = 'email' | 'update' | 'success';
 
 export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [step, setStep] = useState<ResetStep>('email');
   const [email, setEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [successTitle, setSuccessTitle] = useState('');
+  const [successSubtitle, setSuccessSubtitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (isMounted && data.session) {
+        setStep('update');
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setStep('update');
+        setErrorMsg('');
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,15 +50,51 @@ export const ForgotPasswordPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/forgot-password`
+      });
 
       if (error) throw error;
+      setSuccessTitle('Reset Email Sent');
+      setSuccessSubtitle('Please check your inbox and open the reset link from Supabase.');
       setStep('success');
       setTimeout(() => {
         navigate('/auth');
       }, 2500);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Something went wrong');
+      setErrorMsg(getFriendlyAuthError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (newPassword !== confirmPassword) {
+      setErrorMsg('Both passkeys must match.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      setSuccessTitle('Passkey Updated');
+      setSuccessSubtitle('You can now sign in with your new passkey.');
+      setStep('success');
+      await supabase.auth.signOut();
+      setTimeout(() => {
+        navigate('/auth');
+      }, 2000);
+    } catch (err: any) {
+      setErrorMsg(getFriendlyAuthError(err, 'Unable to update your passkey. Please request a new reset link.'));
     } finally {
       setLoading(false);
     }
@@ -45,8 +108,13 @@ export const ForgotPasswordPage: React.FC = () => {
     },
     success: {
       icon: <CheckCircle2 size={32} />,
-      title: 'Reset Email Sent!',
-      subtitle: 'Please check your inbox and follow the password reset link. Redirecting to login...'
+      title: 'Reset Request Complete',
+      subtitle: 'Follow the email link or sign in with your new passkey.'
+    },
+    update: {
+      icon: <KeyRound size={24} />,
+      title: 'Set New Passkey',
+      subtitle: 'Choose a new passkey for your AuctionMart account.'
     }
   };
 
@@ -65,8 +133,8 @@ export const ForgotPasswordPage: React.FC = () => {
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden p-6 relative">
         {step === 'success' ? (
           <AuthSuccessState
-            title="Reset Email Sent!"
-            subtitle="Routing you back to the login page..."
+            title={successTitle || currentStep.title}
+            subtitle={successSubtitle || currentStep.subtitle}
           />
         ) : (
           <ForgotPasswordForm
@@ -75,7 +143,12 @@ export const ForgotPasswordPage: React.FC = () => {
             loading={loading}
             email={email}
             setEmail={setEmail}
+            newPassword={newPassword}
+            setNewPassword={setNewPassword}
+            confirmPassword={confirmPassword}
+            setConfirmPassword={setConfirmPassword}
             handleEmailSubmit={handleEmailSubmit}
+            handlePasswordSubmit={handlePasswordSubmit}
           />
         )}
       </div>
