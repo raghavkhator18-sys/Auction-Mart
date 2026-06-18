@@ -3,7 +3,6 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuctionMart } from '@/app/store';
 import { AdminDashboard } from '@/modules/admin/pages/AdminDashboard';
 import { AuthPage } from '@/modules/auth/pages/AuthPage';
-import { OtpVerificationPage } from '@/modules/auth/pages/OtpVerificationPage';
 import { ForgotPasswordPage } from '@/modules/auth/pages/ForgotPasswordPage';
 import { BrowseAuctions } from '@/modules/auctions/pages/BrowseAuctions';
 import { LandingHome } from '@/modules/auctions/pages/LandingHome';
@@ -50,14 +49,6 @@ export const AppRoutes: React.FC = () => {
               <AuthPage setCurrentScreen={setCurrentScreen} />
             </div>
           }
-        />
-        <Route 
-          path="/verify-otp" 
-          element={
-            <div className="animate-in fade-in duration-350">
-              <OtpVerificationPage />
-            </div>
-          } 
         />
         <Route
           path="/forgot-password"

@@ -1,39 +1,33 @@
-import api from '@/lib/axios';
+import { supabase } from '@/lib/supabase';
 
 export const signup = async (
   name: string,
   email: string,
   password: string
 ) => {
-  const response = await api.post('/auth/signup', {
-    name,
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        name
+      }
+    }
   });
 
-  return response.data;
-};
-
-export const verifyOTP = async (
-  email: string,
-  otp: string
-) => {
-  const response = await api.post('/auth/verify-otp', {
-    email,
-    otp,
-  });
-
-  return response.data;
+  if (error) throw error;
+  return data;
 };
 
 export const login = async (
   email: string,
   password: string
 ) => {
-  const response = await api.post('/auth/login', {
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
-  return response.data;
+  if (error) throw error;
+  return data;
 };

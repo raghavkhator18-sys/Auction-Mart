@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Gavel } from 'lucide-react';
 import { ScreenId } from '@/shared/types';
 import { useAuctionMart } from '@/app/store';
-import { saveToken, saveUser } from '@/lib/authHelpers';
-import api from '@/lib/axios';
+import { supabase } from '@/lib/supabase';
 
 import { AuthHeader } from '../components/AuthHeader';
 import { AuthSuccessState } from '../components/AuthSuccessState';
@@ -18,12 +16,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   setCurrentScreen
 }) => {
   const { handleSignInSuccess } = useAuctionMart();
-  const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [successTitle, setSuccessTitle] = useState('');
+  const [successSubtitle, setSuccessSubtitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -33,28 +32,37 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setLoading(true);
 
     try {
-      const url = isSignUp ? '/auth/signup' : '/auth/login';
-      const payload = isSignUp ? { name: fullName, email, password } : { email, password };
-      
-      console.log(`[AUTH DEBUG] Request URL: ${api.defaults.baseURL}${url}`);
-      console.log(`[AUTH DEBUG] Payload:`, payload);
-
       if (isSignUp) {
-        const res = await api.post(url, payload);
-        console.log(`[AUTH DEBUG] Status:`, res.status);
-        console.log(`[AUTH DEBUG] Response:`, res.data);
-        navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name: fullName
+            }
+          }
+        });
+
+        if (error) throw error;
+        if (data.session) {
+          await supabase.auth.signOut();
+        }
+        setSuccessTitle('Verification Email Sent');
+        setSuccessSubtitle('Verification email sent. Please check your inbox and click the confirmation link.');
+        setIsSuccess(true);
       } else {
-        const res = await api.post(url, payload);
-        console.log(`[AUTH DEBUG] Status:`, res.status);
-        console.log(`[AUTH DEBUG] Response:`, res.data);
-        
-        const token = res.data.token || 'dummy-jwt-' + email;
-        const userName = res.data.user?.name || email.split('@')[0];
-        const userEmail = res.data.user?.email || email;
-        saveToken(token);
-        saveUser({ name: userName, email: userEmail });
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) throw error;
+
+        const userName = data.user?.user_metadata?.name || data.user?.user_metadata?.full_name || data.user?.email?.split('@')[0] || email.split('@')[0];
+        const userEmail = data.user?.email || email;
         handleSignInSuccess(userName, userEmail);
+        setSuccessTitle('Identity Verified');
+        setSuccessSubtitle('Routing secure session to your browser. Unlocking active lots...');
         setIsSuccess(true);
         setTimeout(() => {
           setIsSuccess(false);
@@ -62,10 +70,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         }, 1500);
       }
     } catch (err: any) {
-      console.error(`[AUTH DEBUG] Error Status:`, err.response?.status);
-      console.error(`[AUTH DEBUG] Error Response:`, err.response?.data);
-      console.error(`[AUTH DEBUG] Error Details:`, err);
-      setErrorMsg(err.response?.data?.message || err.response?.data?.error || err.message || 'Authentication failed');
+      setErrorMsg(err.message || 'Authentication failed');
     } finally {
       setLoading(false);
     }
@@ -82,8 +87,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden p-6 relative">
         {isSuccess ? (
           <AuthSuccessState
-            title="Identity Verified"
-            subtitle="Routing secure token to your browser. Unlocking active lots..."
+            title={successTitle}
+            subtitle={successSubtitle}
           />
         ) : (
           <AuthForm

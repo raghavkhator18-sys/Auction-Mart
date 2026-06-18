@@ -7,7 +7,6 @@ const cors = require("cors");
 const app = express();
 
 // ─── Existing Auth Routes (do not modify) ─────────────────────
-const authRoutes = require("./routes/authRoutes");
 
 // ─── New Auction Routes ────────────────────────────────────────
 const auctionRoutes = require("./routes/auctionRoutes");
@@ -25,7 +24,6 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ─── Mount Routes ──────────────────────────────────────────────
-app.use("/auth", authRoutes);       // existing authentication routes
 app.use("/auction", auctionRoutes); // auction listing routes
 app.use("/bids", bidRoutes);        // bid routes
 app.use("/api/feedback", require("./routes/feedbackRoutes")); // feedback routes
@@ -34,4 +32,4 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-});
+});

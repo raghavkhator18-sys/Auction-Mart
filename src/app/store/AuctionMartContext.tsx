@@ -5,8 +5,8 @@ import { mockActivities } from '@/modules/dashboard/services/mockActivities.data
 import { staticUsers } from '@/modules/users/services/mockUsers.data';
 import { pathToScreen, screenToPath } from '@/shared/constants/routes';
 import type { AuctionItem, RecentActivity, ScreenId, UserProfile, UserRole } from '@/shared/types';
-import { getToken, removeToken, getUser, removeUser } from '@/lib/authHelpers';
 import api from '@/lib/axios';
+import { supabase } from '@/lib/supabase';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -125,36 +125,38 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setCurrentScreenState(s);
   }, [location.pathname]);
 
+  const resolveSupabaseUser = useCallback((user: any): CurrentUser | null => {
+    if (!user?.email) return null;
+
+    return {
+      name: user.user_metadata?.name || user.user_metadata?.full_name || user.email.split('@')[0],
+      email: user.email
+    };
+  }, []);
+
   // ── Auth bootstrap ──
   useEffect(() => {
-    const token = getToken();
-    const storedUser = getUser();
-    if (token) {
-      setSession({ access_token: token });
-      
-      let jwtName = 'User';
-      let jwtEmail = token.replace('dummy-jwt-', '');
-      
-      if (token.split('.').length === 3) {
-        try {
-          const payloadBase64 = token.split('.')[1];
-          const decodedJson = decodeURIComponent(escape(window.atob(payloadBase64)));
-          const decoded = JSON.parse(decodedJson);
-          if (decoded.name) jwtName = decoded.name;
-          if (decoded.email) jwtEmail = decoded.email;
-        } catch (e) {
-          console.error("Failed to decode JWT:", e);
-        }
-      }
+    let isMounted = true;
 
-      const resolvedUser = storedUser
-        ? { name: storedUser.name !== jwtEmail.split('@')[0] ? storedUser.name : jwtName, email: storedUser.email || jwtEmail }
-        : { name: jwtName, email: jwtEmail };
+    supabase.auth.getSession().then(({ data }) => {
+      if (!isMounted) return;
 
-      setCurrentUser(resolvedUser);
-    }
-    setIsAuthLoading(false);
-  }, []);
+      setSession(data.session);
+      setCurrentUser(resolveSupabaseUser(data.session?.user));
+      setIsAuthLoading(false);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      setCurrentUser(resolveSupabaseUser(newSession?.user));
+      setIsAuthLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [resolveSupabaseUser]);
 
   // ── Fetch user data from backend when user is known ──
   useEffect(() => {
@@ -410,12 +412,10 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const handleSignInSuccess = useCallback((name: string, email: string) => {
     setCurrentUser({ name, email });
-    setSession({ access_token: 'dummy-jwt-' + email });
   }, []);
 
   const logout = useCallback(async () => {
-    removeToken();
-    removeUser();
+    await supabase.auth.signOut();
     setCurrentUser(null);
     setSession(null);
     setUserListings([]);
