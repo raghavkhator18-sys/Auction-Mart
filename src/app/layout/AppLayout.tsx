@@ -6,7 +6,7 @@ import { AppFooter } from './AppFooter';
 
 export const AppLayout: React.FC = () => {
   const location = useLocation();
-  const hideNavbar = location.pathname.startsWith('/auth') || location.pathname.startsWith('/forgot-password');
+  const hideNavbar = location.pathname.startsWith('/auth') || location.pathname.startsWith('/forgot-password') || location.pathname.startsWith('/reset-password');
 
   return (
     <div id="app-root-container" className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col justify-between transition-colors duration-300">

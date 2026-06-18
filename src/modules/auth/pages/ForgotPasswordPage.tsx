@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, KeyRound } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -8,41 +8,17 @@ import { AuthSuccessState } from '../components/AuthSuccessState';
 import { ForgotPasswordForm } from '../components/ForgotPasswordForm';
 import { getFriendlyAuthError } from '../utils/authErrorMessages';
 
-type ResetStep = 'email' | 'update' | 'success';
+type ResetStep = 'email' | 'success';
 
 export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [step, setStep] = useState<ResetStep>('email');
   const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [successTitle, setSuccessTitle] = useState('');
   const [successSubtitle, setSuccessSubtitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-
-  useEffect(() => {
-    let isMounted = true;
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (isMounted && data.session) {
-        setStep('update');
-      }
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setStep('update');
-        setErrorMsg('');
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +27,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/forgot-password`
+        redirectTo: `${window.location.origin}/reset-password`
       });
 
       if (error) throw error;
@@ -68,38 +44,6 @@ export const ForgotPasswordPage: React.FC = () => {
     }
   };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-
-    if (newPassword !== confirmPassword) {
-      setErrorMsg('Both passkeys must match.');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (error) throw error;
-
-      setSuccessTitle('Passkey Updated');
-      setSuccessSubtitle('You can now sign in with your new passkey.');
-      setStep('success');
-      await supabase.auth.signOut();
-      setTimeout(() => {
-        navigate('/auth');
-      }, 2000);
-    } catch (err: any) {
-      setErrorMsg(getFriendlyAuthError(err, 'Unable to update your passkey. Please request a new reset link.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const stepInfo: Record<ResetStep, { icon: React.ReactNode; title: string; subtitle: string }> = {
     email: {
       icon: <KeyRound size={24} />,
@@ -110,11 +54,6 @@ export const ForgotPasswordPage: React.FC = () => {
       icon: <CheckCircle2 size={32} />,
       title: 'Reset Request Complete',
       subtitle: 'Follow the email link or sign in with your new passkey.'
-    },
-    update: {
-      icon: <KeyRound size={24} />,
-      title: 'Set New Passkey',
-      subtitle: 'Choose a new passkey for your AuctionMart account.'
     }
   };
 
@@ -143,12 +82,7 @@ export const ForgotPasswordPage: React.FC = () => {
             loading={loading}
             email={email}
             setEmail={setEmail}
-            newPassword={newPassword}
-            setNewPassword={setNewPassword}
-            confirmPassword={confirmPassword}
-            setConfirmPassword={setConfirmPassword}
             handleEmailSubmit={handleEmailSubmit}
-            handlePasswordSubmit={handlePasswordSubmit}
           />
         )}
       </div>

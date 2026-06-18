@@ -4,6 +4,7 @@ import { useAuctionMart } from '@/app/store';
 import { AdminDashboard } from '@/modules/admin/pages/AdminDashboard';
 import { AuthPage } from '@/modules/auth/pages/AuthPage';
 import { ForgotPasswordPage } from '@/modules/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/modules/auth/pages/ResetPasswordPage';
 import { BrowseAuctions } from '@/modules/auctions/pages/BrowseAuctions';
 import { LandingHome } from '@/modules/auctions/pages/LandingHome';
 import { MyListings } from '@/modules/my-listings/pages/MyListings';
@@ -40,7 +41,7 @@ export const AppRoutes: React.FC = () => {
     return <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-medium">Checking authentication...</div>;
   }
 
-  if (location.pathname.startsWith('/forgot-password')) {
+  if (location.pathname.startsWith('/forgot-password') || location.pathname.startsWith('/reset-password')) {
     return (
       <Routes>
         <Route
@@ -51,7 +52,15 @@ export const AppRoutes: React.FC = () => {
             </div>
           }
         />
-        <Route path="*" element={<Navigate to="/forgot-password" replace />} />
+        <Route
+          path="/reset-password"
+          element={
+            <div className="animate-in fade-in duration-350">
+              <ResetPasswordPage />
+            </div>
+          }
+        />
+        <Route path="*" element={<Navigate to={location.pathname.startsWith('/reset-password') ? '/reset-password' : '/forgot-password'} replace />} />
       </Routes>
     );
   }
@@ -72,6 +81,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <div className="animate-in fade-in duration-350">
               <ForgotPasswordPage />
+            </div>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <div className="animate-in fade-in duration-350">
+              <ResetPasswordPage />
             </div>
           }
         />
