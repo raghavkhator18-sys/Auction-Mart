@@ -121,18 +121,25 @@ const createAuctionLot = (req, res) => {
 // ============================================================
 // API 2: GET ALL AUCTION LOTS
 // GET /auction/all
-// Returns every listing in the database (for browsing/home feed)
+// Returns active listings in the database (for browsing/home feed)
 // ============================================================
 const getAllAuctions = (req, res) => {
+    const appliedFilters = { status: "active" };
     const sql = `
         SELECT * FROM auction_lots
+        WHERE status = ?
         ORDER BY created_at DESC
     `;
 
-    db.all(sql, [], (err, rows) => {
+    db.all(sql, [appliedFilters.status], (err, rows) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
+        console.info("[auction/all] Public listing query", {
+            totalReturned: rows.length,
+            currentUserId: req.headers["x-user-id"] || null,
+            appliedFilters
+        });
         res.status(200).json(rows);
     });
 };
@@ -172,6 +179,7 @@ const getAuctionById = (req, res) => {
 // ============================================================
 const getUserListings = (req, res) => {
     const { email } = req.params;
+    const appliedFilters = { seller_email: email };
 
     const sql = `
         SELECT * FROM auction_lots
@@ -184,6 +192,11 @@ const getUserListings = (req, res) => {
             return res.status(500).json({ error: err.message });
         }
 
+        console.info("[auction/user] My Listings query", {
+            totalReturned: rows.length,
+            currentUserId: req.headers["x-user-id"] || null,
+            appliedFilters
+        });
         res.status(200).json(rows);
     });
 };

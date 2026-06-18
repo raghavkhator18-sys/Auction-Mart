@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 interface CurrentUser {
+  id?: string;
   name: string;
   email: string;
 }
@@ -73,8 +74,11 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Demo data (read-only baseline)
   const [demoAuctions, setDemoAuctions] = useState<AuctionItem[]>(mockAuctions);
   
-  // User-created listings (persisted in SQLite)
-  const [userListings, setUserListings] = useState<AuctionItem[]>([]);
+  // User-created listings that are public in the marketplace feed.
+  const [publicListings, setPublicListings] = useState<AuctionItem[]>([]);
+
+  // Listings created by the current user, including non-public statuses.
+  const [myUserListings, setMyUserListings] = useState<AuctionItem[]>([]);
   
   // User bids (persisted in SQLite)
   const [userBids, setUserBids] = useState<UserBidRecord[]>([]);
@@ -102,11 +106,11 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
       return item;
     });
-    return [...mergedDemo, ...userListings];
-  }, [demoAuctions, userListings, userBids]);
+    return [...mergedDemo, ...publicListings];
+  }, [demoAuctions, publicListings, userBids]);
 
   // My Listings = only user-created
-  const myListings = userListings;
+  const myListings = myUserListings;
 
   // Backward compat alias
   const auctions = browseAuctions;
@@ -130,9 +134,29 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     return {
       name: user.user_metadata?.name || user.user_metadata?.full_name || user.email.split('@')[0],
+      id: user.id,
       email: user.email
     };
   }, []);
+
+  const mapAuctionRowToItem = useCallback((row: any, fallbackSellerName = 'Seller'): AuctionItem => ({
+    id: `db-${row.id}`,
+    lot_number: row.lot_number || undefined,
+    title: row.title,
+    category: row.category,
+    description: row.description || '',
+    sku: row.sku_reference || undefined,
+    currentBid: row.starting_price,
+    totalBids: 0,
+    imageUrl: row.image_path ? `${API_BASE}${row.image_path}` : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEi87bMnKhFHqJ3-zB0UuV6jek8iK5RePOJRXV62pmn0yIcl4v8EvDYcm-Ly55EYUuEciZN5oWWuibLFf4Sip57Ik2O_0b75GPA3RWubAg0gKLKgrgn2zTb8dlt_zamBRtVL2N9HW1AlE_8BEJw_IWbh_hbEwUmic1hFqKY3IXbqkjTDm7iz5bbUxyfDgqThvUCty4I2ey0N8HC-ijylmRVLpJGcJHnU7QISv1-lhrS4lBidJGqCXYBqgEpkJcLyZajyJ7svbRlwr2',
+    timerSeconds: row.duration || 604800,
+    status: (row.status as AuctionItem['status']) || 'active',
+    condition: (row.condition_status as AuctionItem['condition']) || 'New',
+    sellerName: row.seller_name || fallbackSellerName,
+    sellerRating: 5.0,
+    sellerSales: 0,
+    sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
+  }), []);
 
   // ── Auth bootstrap ──
   useEffect(() => {
@@ -162,27 +186,47 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   useEffect(() => {
     if (!currentUser?.email) return;
 
-    // Fetch user's own listings
-    api.get(`/auction/user/${encodeURIComponent(currentUser.email)}`)
+    const userId = session?.user?.id || currentUser.id || currentUser.email;
+
+    // Fetch active/public listings for marketplace and homepage.
+    console.info('[listings:public] Fetching marketplace listings', {
+      currentUserId: userId,
+      appliedFilters: { status: 'active' }
+    });
+    api.get('/auction/all', {
+      headers: { 'x-user-id': userId }
+    })
       .then(res => {
-        const dbListings: AuctionItem[] = (res.data || []).map((row: any) => ({
-          id: `db-${row.id}`,
-          title: row.title,
-          category: row.category,
-          description: row.description || '',
-          sku: row.sku_reference || undefined,
-          currentBid: row.starting_price,
-          totalBids: 0,
-          imageUrl: row.image_path ? `${API_BASE}${row.image_path}` : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEi87bMnKhFHqJ3-zB0UuV6jek8iK5RePOJRXV62pmn0yIcl4v8EvDYcm-Ly55EYUuEciZN5oWWuibLFf4Sip57Ik2O_0b75GPA3RWubAg0gKLKgrgn2zTb8dlt_zamBRtVL2N9HW1AlE_8BEJw_IWbh_hbEwUmic1hFqKY3IXbqkjTDm7iz5bbUxyfDgqThvUCty4I2ey0N8HC-ijylmRVLpJGcJHnU7QISv1-lhrS4lBidJGqCXYBqgEpkJcLyZajyJ7svbRlwr2',
-          timerSeconds: row.duration || 604800,
-          status: (row.status as any) || 'active',
-          condition: (row.condition_status as any) || 'New',
-          sellerName: row.seller_name || currentUser.name,
-          sellerRating: 5.0,
-          sellerSales: 0,
-          sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
-        }));
-        setUserListings(dbListings);
+        const dbListings: AuctionItem[] = (res.data || []).map((row: any) =>
+          mapAuctionRowToItem(row, row.seller_name || 'Seller')
+        );
+        console.info('[listings:public] Marketplace listings returned', {
+          totalReturned: dbListings.length,
+          currentUserId: userId,
+          appliedFilters: { status: 'active' }
+        });
+        setPublicListings(dbListings);
+      })
+      .catch(err => console.error("Failed to fetch public listings:", err));
+
+    // Fetch user's own listings
+    console.info('[listings:mine] Fetching My Listings', {
+      currentUserId: userId,
+      appliedFilters: { seller_email: currentUser.email }
+    });
+    api.get(`/auction/user/${encodeURIComponent(currentUser.email)}`, {
+      headers: { 'x-user-id': userId }
+    })
+      .then(res => {
+        const dbListings: AuctionItem[] = (res.data || []).map((row: any) =>
+          mapAuctionRowToItem(row, currentUser.name)
+        );
+        console.info('[listings:mine] My Listings returned', {
+          totalReturned: dbListings.length,
+          currentUserId: userId,
+          appliedFilters: { seller_email: currentUser.email }
+        });
+        setMyUserListings(dbListings);
       })
       .catch(err => console.error("Failed to fetch user listings:", err));
 
@@ -192,7 +236,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setUserBids(res.data || []);
       })
       .catch(err => console.error("Failed to fetch user bids:", err));
-  }, [currentUser?.email]);
+  }, [currentUser?.email, currentUser?.id, currentUser?.name, mapAuctionRowToItem, session?.user?.id]);
 
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) =>
@@ -203,7 +247,10 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // ── Create listing: POST to backend, then update local state ──
   const handleCreateListing = useCallback((newItem: AuctionItem) => {
     // Add to local state immediately for responsiveness
-    setUserListings((prev) => [newItem, ...prev]);
+    setMyUserListings((prev) => [newItem, ...prev]);
+    if (newItem.status === 'active') {
+      setPublicListings((prev) => [newItem, ...prev]);
+    }
 
     // Also persist via API (the MyListings form now handles the API call directly)
   }, []);
@@ -213,7 +260,8 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!itemId.startsWith('db-')) return;
     
     // Optimistic delete
-    setUserListings(prev => prev.filter(item => item.id !== itemId));
+    setMyUserListings(prev => prev.filter(item => item.id !== itemId));
+    setPublicListings(prev => prev.filter(item => item.id !== itemId));
 
     // Persist delete
     try {
@@ -245,7 +293,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     );
 
     // Update user listings if it's a user item
-    setUserListings((prev) =>
+    setPublicListings((prev) =>
       prev.map((item) => {
         if (item.id === itemId) {
           return {
@@ -291,7 +339,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     // Add activity
     setActivities((prevActivities) => {
-      const allItems = [...demoAuctions, ...userListings];
+      const allItems = [...demoAuctions, ...publicListings];
       const item = allItems.find((a) => a.id === itemId);
       if (!item) return prevActivities;
       const newAct: RecentActivity = {
@@ -306,7 +354,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       };
       return [newAct, ...prevActivities];
     });
-  }, [currentUser, demoAuctions, userListings]);
+  }, [currentUser, demoAuctions, publicListings]);
 
   const handleBidIncrease = useCallback((itemId: string, newAmount: number) => {
     // Update demo auctions
@@ -326,7 +374,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     );
 
     // Update user listings
-    setUserListings((prev) =>
+    setPublicListings((prev) =>
       prev.map((item) => {
         if (item.id === itemId) {
           return {
@@ -368,7 +416,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     setActivities((prevActivities) => {
-      const allItems = [...demoAuctions, ...userListings];
+      const allItems = [...demoAuctions, ...publicListings];
       const item = allItems.find((a) => a.id === itemId);
       if (!item) return prevActivities;
       const newAct: RecentActivity = {
@@ -383,7 +431,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       };
       return [newAct, ...prevActivities];
     });
-  }, [currentUser, demoAuctions, userListings]);
+  }, [currentUser, demoAuctions, publicListings]);
 
   const handleClearFlag = useCallback((id: string) => {
     setDemoAuctions((prev) =>
@@ -418,7 +466,8 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     await supabase.auth.signOut();
     setCurrentUser(null);
     setSession(null);
-    setUserListings([]);
+    setPublicListings([]);
+    setMyUserListings([]);
     setUserBids([]);
     setActivities([]);
     setFavorites([]);
