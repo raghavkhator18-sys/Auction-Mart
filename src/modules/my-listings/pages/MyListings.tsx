@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AuctionItem, ScreenId } from '@/shared/types';
 import { useAuctionMart } from '@/app/store';
+import api from '@/lib/axios';
 import { MyListingsHeader } from '../components/MyListingsHeader';
 import { StatsCards } from '../components/StatsCards';
 import { ListingsFilters } from '../components/ListingsFilters';
@@ -93,16 +94,8 @@ export const MyListings: React.FC<MyListingsProps> = ({
     }
 
     try {
-      const response = await fetch('http://localhost:5000/auction/create', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.message || 'Failed to create listing');
-        return;
-      }
+      const response = await api.post('/auction/create', formData);
+      const data = response.data;
 
       const resolvedImageUrl =
         uploadedImages.length > 0
@@ -141,9 +134,10 @@ export const MyListings: React.FC<MyListingsProps> = ({
       setNewCondition('New');
       setNewSku(generateRandomSku());
       clearImages();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create listing:', err);
-      alert('Failed to create listing. Please try again.');
+      const errMsg = err.response?.data?.message || 'Failed to create listing. Please try again.';
+      alert(errMsg);
     }
   };
 

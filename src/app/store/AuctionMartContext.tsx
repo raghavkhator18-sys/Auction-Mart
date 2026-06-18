@@ -6,9 +6,9 @@ import { staticUsers } from '@/modules/users/services/mockUsers.data';
 import { pathToScreen, screenToPath } from '@/shared/constants/routes';
 import type { AuctionItem, RecentActivity, ScreenId, UserProfile, UserRole } from '@/shared/types';
 import { getToken, removeToken, getUser, removeUser } from '@/lib/authHelpers';
-import axios from 'axios';
+import api from '@/lib/axios';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 interface CurrentUser {
   name: string;
@@ -161,7 +161,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!currentUser?.email) return;
 
     // Fetch user's own listings
-    axios.get(`${API_BASE}/auction/user/${encodeURIComponent(currentUser.email)}`)
+    api.get(`/auction/user/${encodeURIComponent(currentUser.email)}`)
       .then(res => {
         const dbListings: AuctionItem[] = (res.data || []).map((row: any) => ({
           id: `db-${row.id}`,
@@ -185,7 +185,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       .catch(err => console.error("Failed to fetch user listings:", err));
 
     // Fetch user's bids
-    axios.get(`${API_BASE}/bids/user/${encodeURIComponent(currentUser.email)}`)
+    api.get(`/bids/user/${encodeURIComponent(currentUser.email)}`)
       .then(res => {
         setUserBids(res.data || []);
       })
@@ -216,7 +216,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Persist delete
     try {
       const numericId = itemId.replace('db-', '');
-      await axios.delete(`${API_BASE}/auction/${numericId}`);
+      await api.delete(`/auction/${numericId}`);
     } catch (err) {
       console.error("Failed to delete listing:", err);
       // Optional: Handle error by refetching
@@ -261,7 +261,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     // Persist bid to backend
     if (currentUser) {
-      axios.post(`${API_BASE}/bids/place`, {
+      api.post(`/bids/place`, {
         auction_id: itemId,
         user_email: currentUser.email,
         user_name: currentUser.name,
@@ -341,7 +341,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     // Persist bid
     if (currentUser) {
-      axios.post(`${API_BASE}/bids/place`, {
+      api.post(`/bids/place`, {
         auction_id: itemId,
         user_email: currentUser.email,
         user_name: currentUser.name,

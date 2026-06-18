@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, CheckCircle, FileCheck, PlayCircle, TrendingUp } from 'lucide-react';
 import { AuctionItem } from '@/shared/types';
 import { useAuctionMart } from '@/app/store';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 interface ProductTabsProps {
   item: AuctionItem;
 }
 
-/** Convert seconds into a human-readable duration string */
+/** Convert seconds into a human-readable duration duration string */
 const formatDuration = (seconds: number): string => {
   if (seconds <= 0) return 'Ended';
   const d = Math.floor(seconds / 86400);
@@ -28,7 +28,7 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({ item }) => {
 
   useEffect(() => {
     if (activeTab === 'history' && isUserCreated) {
-      axios.get(`http://localhost:5000/bids/auction/${item.id}`)
+      api.get(`/bids/auction/${item.id}`)
         .then(res => setBids(res.data))
         .catch(err => console.error("Failed to fetch bids", err));
     }

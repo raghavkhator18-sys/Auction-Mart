@@ -1,57 +1,39 @@
-const API_URL = "http://localhost:5000/auth";
+import api from '@/lib/axios';
 
 export const signup = async (
   name: string,
   email: string,
   password: string
 ) => {
-  const response = await fetch(`${API_URL}/signup`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      name,
-      email,
-      password,
-    }),
+  const response = await api.post('/auth/signup', {
+    name,
+    email,
+    password,
   });
 
-  return response.json();
+  return response.data;
 };
 
 export const verifyOTP = async (
   email: string,
   otp: string
 ) => {
-  const response = await fetch(`${API_URL}/verify-otp`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email,
-      otp,
-    }),
+  const response = await api.post('/auth/verify-otp', {
+    email,
+    otp,
   });
 
-  return response.json();
+  return response.data;
 };
 
 export const login = async (
   email: string,
   password: string
 ) => {
-  const response = await fetch(`${API_URL}/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email,
-      password,
-    }),
+  const response = await api.post('/auth/login', {
+    email,
+    password,
   });
 
-  return response.json();
+  return response.data;
 };

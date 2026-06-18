@@ -33,11 +33,22 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setLoading(true);
 
     try {
+      const url = isSignUp ? '/auth/signup' : '/auth/login';
+      const payload = isSignUp ? { name: fullName, email, password } : { email, password };
+      
+      console.log(`[AUTH DEBUG] Request URL: ${api.defaults.baseURL}${url}`);
+      console.log(`[AUTH DEBUG] Payload:`, payload);
+
       if (isSignUp) {
-        await api.post('/auth/signup', { name: fullName, email, password });
+        const res = await api.post(url, payload);
+        console.log(`[AUTH DEBUG] Status:`, res.status);
+        console.log(`[AUTH DEBUG] Response:`, res.data);
         navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
       } else {
-        const res = await api.post('/auth/login', { email, password });
+        const res = await api.post(url, payload);
+        console.log(`[AUTH DEBUG] Status:`, res.status);
+        console.log(`[AUTH DEBUG] Response:`, res.data);
+        
         const token = res.data.token || 'dummy-jwt-' + email;
         const userName = res.data.user?.name || email.split('@')[0];
         const userEmail = res.data.user?.email || email;
@@ -51,6 +62,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         }, 1500);
       }
     } catch (err: any) {
+      console.error(`[AUTH DEBUG] Error Status:`, err.response?.status);
+      console.error(`[AUTH DEBUG] Error Response:`, err.response?.data);
+      console.error(`[AUTH DEBUG] Error Details:`, err);
       setErrorMsg(err.response?.data?.message || err.response?.data?.error || err.message || 'Authentication failed');
     } finally {
       setLoading(false);
