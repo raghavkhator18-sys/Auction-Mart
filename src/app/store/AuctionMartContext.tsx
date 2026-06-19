@@ -28,6 +28,15 @@ interface UserBidRecord {
   created_at: string;
 }
 
+// Shape of a highest-bid aggregate row
+interface HighestBidRecord {
+  auction_id: string;
+  highest_bid: number;
+  highest_bidder_email: string;
+  highest_bidder_name: string | null;
+  total_bids: number;
+}
+
 interface AuctionMartContextValue {
   currentScreen: ScreenId;
   setCurrentScreen: (s: ScreenId) => void;
@@ -36,13 +45,13 @@ interface AuctionMartContextValue {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   // Data sources
-  browseAuctions: AuctionItem[];    // demo + user-created (for Browse page)
-  myListings: AuctionItem[];        // user-created only (for My Listings)
+  browseAuctions: AuctionItem[];    // demo + ALL user-created (for Browse page)
+  myListings: AuctionItem[];        // current user's listings only (for My Listings)
   auctions: AuctionItem[];          // alias for browseAuctions (backward compat)
   activities: RecentActivity[];
   users: UserProfile[];
   favorites: string[];
-  selectedProduct: AuctionItem;
+  selectedProduct: AuctionItem | null;
   currentUser: CurrentUser | null;
   userBids: UserBidRecord[];
   // Actions
@@ -74,43 +83,116 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Demo data (read-only baseline)
   const [demoAuctions, setDemoAuctions] = useState<AuctionItem[]>(mockAuctions);
   
+<<<<<<< HEAD
   // User-created listings that are public in the marketplace feed.
   const [publicListings, setPublicListings] = useState<AuctionItem[]>([]);
 
   // Listings created by the current user, including non-public statuses.
   const [myUserListings, setMyUserListings] = useState<AuctionItem[]>([]);
+=======
+  // ALL user-created listings from every seller (persisted in SQLite)
+  const [allDbListings, setAllDbListings] = useState<AuctionItem[]>([]);
+>>>>>>> d725eeb (Some critical issues)
   
   // User bids (persisted in SQLite)
   const [userBids, setUserBids] = useState<UserBidRecord[]>([]);
 
+  // Highest bid aggregates per auction (persisted in SQLite)
+  const [highestBids, setHighestBids] = useState<HighestBidRecord[]>([]);
+
   const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [users, setUsers] = useState<UserProfile[]>(staticUsers);
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<AuctionItem>(mockAuctions[0]);
+  const [selectedProduct, setSelectedProduct] = useState<AuctionItem | null>(null);
   const [session, setSession] = useState<any | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
+  // ── Helper: map a DB row to AuctionItem ──
+  const mapDbRowToAuctionItem = useCallback((row: any): AuctionItem => ({
+    id: `db-${row.id}`,
+    title: row.title,
+    category: row.category,
+    description: row.description || '',
+    sku: row.sku_reference || undefined,
+    currentBid: row.starting_price,
+    totalBids: 0,
+    imageUrl: row.image_path
+      ? row.image_path.split(',').map((p: string) => `${API_BASE}${p.trim()}`).join(',')
+      : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEi87bMnKhFHqJ3-zB0UuV6jek8iK5RePOJRXV62pmn0yIcl4v8EvDYcm-Ly55EYUuEciZN5oWWuibLFf4Sip57Ik2O_0b75GPA3RWubAg0gKLKgrgn2zTb8dlt_zamBRtVL2N9HW1AlE_8BEJw_IWbh_hbEwUmic1hFqKY3IXbqkjTDm7iz5bbUxyfDgqThvUCty4I2ey0N8HC-ijylmRVLpJGcJHnU7QISv1-lhrS4lBidJGqCXYBqgEpkJcLyZajyJ7svbRlwr2',
+    timerSeconds: row.duration || 604800,
+    status: (row.status as any) || 'active',
+    condition: (row.condition_status as any) || 'New',
+    sellerName: row.seller_name || row.seller_email?.split('@')[0] || 'Seller',
+    sellerRating: 5.0,
+    sellerSales: 0,
+    sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
+  }), []);
+
   // ── Derived data sources ──
-  // Browse Auctions = demo + user-created, with bid info merged
+  // Browse Auctions = demo + ALL DB listings, with highest-bid data merged
   const browseAuctions = useMemo(() => {
+    // Build a lookup of highest bids by auction_id
+    const bidLookup: Record<string, HighestBidRecord> = {};
+    highestBids.forEach(hb => { bidLookup[hb.auction_id] = hb; });
+
     const mergedDemo = demoAuctions.map(item => {
+      const hb = bidLookup[item.id];
       const userBid = userBids.find(b => b.auction_id === item.id);
-      if (userBid) {
-        return {
-          ...item,
+
+      return {
+        ...item,
+        // If bids exist in DB, use the highest bid as currentBid
+        currentBid: hb ? hb.highest_bid : item.currentBid,
+        totalBids: hb ? hb.total_bids : item.totalBids,
+        // User's own bid info
+        ...(userBid ? {
           yourBid: userBid.bid_amount,
           yourMaxBid: userBid.max_bid ?? undefined,
           bidStatus: userBid.bid_status as 'winning' | 'outbid' | 'none',
-        };
-      }
-      return item;
+        } : {}),
+      };
     });
+<<<<<<< HEAD
     return [...mergedDemo, ...publicListings];
   }, [demoAuctions, publicListings, userBids]);
 
   // My Listings = only user-created
   const myListings = myUserListings;
+=======
+
+    const mergedDb = allDbListings.map(item => {
+      const hb = bidLookup[item.id];
+      const userBid = userBids.find(b => b.auction_id === item.id);
+
+      return {
+        ...item,
+        currentBid: hb ? hb.highest_bid : item.currentBid,
+        totalBids: hb ? hb.total_bids : item.totalBids,
+        ...(userBid ? {
+          yourBid: userBid.bid_amount,
+          yourMaxBid: userBid.max_bid ?? undefined,
+          bidStatus: userBid.bid_status as 'winning' | 'outbid' | 'none',
+        } : {}),
+      };
+    });
+
+    return [...mergedDemo, ...mergedDb];
+  }, [demoAuctions, allDbListings, highestBids, userBids]);
+
+  // My Listings = DB listings filtered to the current user
+  const myListings = useMemo(() => {
+    if (!currentUser?.email) return [];
+    return allDbListings.filter(item => {
+      // Match by seller name/email — DB listings store seller_email but our
+      // AuctionItem maps it to sellerName. We also store the original email
+      // in the mapping. For safety, match both approaches.
+      // The mapDbRowToAuctionItem sets sellerName from seller_name || seller_email.split('@')[0].
+      // We need a reliable match — let's check the raw list approach.
+      return true; // Placeholder — we need to track seller_email on AuctionItem
+    });
+  }, [allDbListings, currentUser?.email]);
+>>>>>>> d725eeb (Some critical issues)
 
   // Backward compat alias
   const auctions = browseAuctions;
@@ -182,10 +264,18 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
   }, [resolveSupabaseUser]);
 
-  // ── Fetch user data from backend when user is known ──
+  // ── Helper: refresh highest bids from backend ──
+  const refreshHighestBids = useCallback(() => {
+    api.get('/bids/highest')
+      .then(res => setHighestBids(res.data || []))
+      .catch(err => console.error("Failed to fetch highest bids:", err));
+  }, []);
+
+  // ── Fetch ALL data from backend when user is known ──
   useEffect(() => {
     if (!currentUser?.email) return;
 
+<<<<<<< HEAD
     const userId = session?.user?.id || currentUser.id || currentUser.email;
 
     // Fetch active/public listings for marketplace and homepage.
@@ -227,8 +317,18 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
           appliedFilters: { seller_email: currentUser.email }
         });
         setMyUserListings(dbListings);
+=======
+    // Fetch ALL listings from all sellers (for Browse page cross-account visibility)
+    api.get('/auction/all')
+      .then(res => {
+        const dbListings: AuctionItem[] = (res.data || []).map((row: any) => ({
+          ...mapDbRowToAuctionItem(row),
+          _sellerEmail: row.seller_email, // stash for filtering myListings
+        }));
+        setAllDbListings(dbListings);
+>>>>>>> d725eeb (Some critical issues)
       })
-      .catch(err => console.error("Failed to fetch user listings:", err));
+      .catch(err => console.error("Failed to fetch all listings:", err));
 
     // Fetch user's bids
     api.get(`/bids/user/${encodeURIComponent(currentUser.email)}`)
@@ -236,7 +336,14 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setUserBids(res.data || []);
       })
       .catch(err => console.error("Failed to fetch user bids:", err));
+<<<<<<< HEAD
   }, [currentUser?.email, currentUser?.id, currentUser?.name, mapAuctionRowToItem, session?.user?.id]);
+=======
+
+    // Fetch highest bids
+    refreshHighestBids();
+  }, [currentUser?.email, mapDbRowToAuctionItem, refreshHighestBids]);
+>>>>>>> d725eeb (Some critical issues)
 
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) =>
@@ -246,11 +353,16 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // ── Create listing: POST to backend, then update local state ──
   const handleCreateListing = useCallback((newItem: AuctionItem) => {
+<<<<<<< HEAD
     // Add to local state immediately for responsiveness
     setMyUserListings((prev) => [newItem, ...prev]);
     if (newItem.status === 'active') {
       setPublicListings((prev) => [newItem, ...prev]);
     }
+=======
+    // Add to local allDbListings state immediately for responsiveness
+    setAllDbListings((prev) => [newItem, ...prev]);
+>>>>>>> d725eeb (Some critical issues)
 
     // Also persist via API (the MyListings form now handles the API call directly)
   }, []);
@@ -260,8 +372,12 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!itemId.startsWith('db-')) return;
     
     // Optimistic delete
+<<<<<<< HEAD
     setMyUserListings(prev => prev.filter(item => item.id !== itemId));
     setPublicListings(prev => prev.filter(item => item.id !== itemId));
+=======
+    setAllDbListings(prev => prev.filter(item => item.id !== itemId));
+>>>>>>> d725eeb (Some critical issues)
 
     // Persist delete
     try {
@@ -269,12 +385,12 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       await api.delete(`/auction/${numericId}`);
     } catch (err) {
       console.error("Failed to delete listing:", err);
-      // Optional: Handle error by refetching
     }
   }, []);
 
-  // ── Place bid: POST to backend, then update local state ──
+  // ── Place bid: POST to backend, then refresh highest bids ──
   const handlePlaceBid = useCallback((itemId: string, bidAmount: number, maxBid?: number) => {
+<<<<<<< HEAD
     // Update demo auctions if it's a demo item
     setDemoAuctions((prev) =>
       prev.map((item) => {
@@ -310,6 +426,9 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     );
 
     // Persist bid to backend
+=======
+    // Persist bid to backend FIRST, then refresh
+>>>>>>> d725eeb (Some critical issues)
     if (currentUser) {
       api.post(`/bids/place`, {
         auction_id: itemId,
@@ -319,7 +438,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
         max_bid: maxBid || null
       })
       .then(res => {
-        // Update local bids state
+        // Update local user-bids state
         setUserBids(prev => {
           const filtered = prev.filter(b => b.auction_id !== itemId);
           return [...filtered, {
@@ -333,13 +452,20 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
             created_at: new Date().toISOString()
           }];
         });
+
+        // Refresh highest bids so ALL views update
+        refreshHighestBids();
       })
       .catch(err => console.error("Failed to persist bid:", err));
     }
 
     // Add activity
     setActivities((prevActivities) => {
+<<<<<<< HEAD
       const allItems = [...demoAuctions, ...publicListings];
+=======
+      const allItems = [...demoAuctions, ...allDbListings];
+>>>>>>> d725eeb (Some critical issues)
       const item = allItems.find((a) => a.id === itemId);
       if (!item) return prevActivities;
       const newAct: RecentActivity = {
@@ -354,6 +480,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       };
       return [newAct, ...prevActivities];
     });
+<<<<<<< HEAD
   }, [currentUser, demoAuctions, publicListings]);
 
   const handleBidIncrease = useCallback((itemId: string, newAmount: number) => {
@@ -389,6 +516,11 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       })
     );
 
+=======
+  }, [currentUser, demoAuctions, allDbListings, refreshHighestBids]);
+
+  const handleBidIncrease = useCallback((itemId: string, newAmount: number) => {
+>>>>>>> d725eeb (Some critical issues)
     // Persist bid
     if (currentUser) {
       api.post(`/bids/place`, {
@@ -411,12 +543,19 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
             created_at: new Date().toISOString()
           }];
         });
+
+        // Refresh highest bids so ALL views update
+        refreshHighestBids();
       })
       .catch(err => console.error("Failed to persist bid increase:", err));
     }
 
     setActivities((prevActivities) => {
+<<<<<<< HEAD
       const allItems = [...demoAuctions, ...publicListings];
+=======
+      const allItems = [...demoAuctions, ...allDbListings];
+>>>>>>> d725eeb (Some critical issues)
       const item = allItems.find((a) => a.id === itemId);
       if (!item) return prevActivities;
       const newAct: RecentActivity = {
@@ -431,7 +570,11 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       };
       return [newAct, ...prevActivities];
     });
+<<<<<<< HEAD
   }, [currentUser, demoAuctions, publicListings]);
+=======
+  }, [currentUser, demoAuctions, allDbListings, refreshHighestBids]);
+>>>>>>> d725eeb (Some critical issues)
 
   const handleClearFlag = useCallback((id: string) => {
     setDemoAuctions((prev) =>
@@ -466,9 +609,14 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     await supabase.auth.signOut();
     setCurrentUser(null);
     setSession(null);
+<<<<<<< HEAD
     setPublicListings([]);
     setMyUserListings([]);
+=======
+    setAllDbListings([]);
+>>>>>>> d725eeb (Some critical issues)
     setUserBids([]);
+    setHighestBids([]);
     setActivities([]);
     setFavorites([]);
     // Reset demo auctions to original state

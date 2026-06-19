@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuctionItem, ScreenId } from '@/shared/types';
 import { useAuctionMart } from '@/app/store';
 import api from '@/lib/axios';
@@ -142,9 +143,9 @@ export const MyListings: React.FC<MyListingsProps> = ({
   };
 
   /* ── Inspect listing ── */
+  const navigateToProduct = useNavigate();
   const handleInspectListing = (item: AuctionItem) => {
-    setSelectedProduct(item);
-    setCurrentScreen('product-detail');
+    navigateToProduct(`/product/${item.id}`);
   };
 
   /* ── Live preview derived values ── */

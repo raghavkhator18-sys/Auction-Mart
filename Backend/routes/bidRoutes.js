@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { placeBid, getUserBids, getAuctionBids } = require("../controllers/bidController");
+const { placeBid, getUserBids, getAuctionBids, getHighestBids } = require("../controllers/bidController");
 
 // POST /bids/place — Place a bid on an auction
 router.post("/place", placeBid);
+
+// GET /bids/highest — Get highest bid + count per auction
+router.get("/highest", getHighestBids);
 
 // GET /bids/user/:email — Get all bids by a user
 router.get("/user/:email", getUserBids);
@@ -12,3 +15,4 @@ router.get("/user/:email", getUserBids);
 router.get("/auction/:auction_id", getAuctionBids);
 
 module.exports = router;
+

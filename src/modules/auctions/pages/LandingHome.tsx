@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Award, ShieldAlert, Zap } from 'lucide-react';
 import { AuctionItem, ScreenId } from '@/shared/types';
 import { HeroSection } from '../components/HeroSection';
@@ -22,9 +23,10 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
   toggleFavorite,
   setSelectedProduct
 }) => {
+  const navigate = useNavigate();
+
   const handleItemClick = (item: AuctionItem) => {
-    setSelectedProduct(item);
-    setCurrentScreen('product-detail');
+    navigate(`/product/${item.id}`);
   };
 
   // Luxury watch and highkey item displays

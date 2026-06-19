@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuctionMart } from '@/app/store';
 import { DashboardOverviewProps } from '../types/dashboard.types';
 
@@ -30,10 +31,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const { recentActivities } = useRecentActivity(activities);
   const { chartData } = useDashboardAnalytics();
 
+  const navigate = useNavigate();
+
   // Callbacks
   const handleRecommendClick = (item: any) => {
-    setSelectedProduct(item);
-    setCurrentScreen('product-detail');
+    navigate(`/product/${item.id}`);
   };
 
   const hasActivity = totalMyBidsCount > 0 || recentActivities.length > 0;

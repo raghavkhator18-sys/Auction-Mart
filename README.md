@@ -98,7 +98,6 @@ This allows identical products to be uniquely tracked throughout the platform.
 * Suggestions
 * Feature Requests
 * Bug Reports
-* Contact Support
 
 ### 🔔 Notifications
 * Auction Updates

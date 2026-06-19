@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuctionItem, ScreenId } from '@/shared/types';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
 import { MyBidsHeader } from '../components/MyBidsHeader';
@@ -45,9 +46,10 @@ export const MyBids: React.FC<MyBidsProps> = ({
     handleIncreaseInputChange(id, ''); // reset input
   };
 
+  const navigate = useNavigate();
+
   const handleCardTitleClick = (item: AuctionItem) => {
-    setSelectedProduct(item);
-    setCurrentScreen('product-detail');
+    navigate(`/product/${item.id}`);
   };
 
   return (

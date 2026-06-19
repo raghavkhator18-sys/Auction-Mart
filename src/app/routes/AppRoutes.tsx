@@ -178,20 +178,8 @@ export const AppRoutes: React.FC = () => {
       />
       <Route path="/bids" element={<Navigate to="/my-bids" replace />} />
 
-      <Route
-        path="/product-detail"
-        element={
-          <div className="animate-in fade-in duration-350">
-            <ProductDetail
-              item={selectedProduct}
-              favorites={favorites}
-              toggleFavorite={toggleFavorite}
-              onPlaceBid={handlePlaceBid}
-              setCurrentScreen={setCurrentScreen}
-            />
-          </div>
-        }
-      />
+      {/* Legacy /product-detail redirects to browse — use /product/:id instead */}
+      <Route path="/product-detail" element={<Navigate to="/browse-auctions" replace />} />
 
       <Route path="/product/:id" element={<ProductDetailRoute />} />
 

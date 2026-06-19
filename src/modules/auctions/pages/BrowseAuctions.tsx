@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Gavel, Clock3, CalendarDays, Archive, Heart } from 'lucide-react';
 import { AuctionItem, ScreenId } from '@/shared/types';
 import { AuctionFilters } from '../components/AuctionFilters';
@@ -102,9 +103,10 @@ export const BrowseAuctions: React.FC<BrowseAuctionsProps> = ({
     return b.totalBids - a.totalBids;
   });
 
+  const navigate = useNavigate();
+
   const handleCardClick = (item: AuctionItem) => {
-    setSelectedProduct(item);
-    setCurrentScreen('product-detail');
+    navigate(`/product/${item.id}`);
   };
 
   // Local loading simulation for skeletons (replace with real loading flag if available)

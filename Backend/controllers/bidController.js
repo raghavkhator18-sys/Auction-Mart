@@ -131,8 +131,39 @@ const getAuctionBids = (req, res) => {
     });
 };
 
+// ============================================================
+// GET /bids/highest
+// Returns the highest bid amount, total bid count, and highest
+// bidder info for every auction that has received at least one bid.
+// ============================================================
+const getHighestBids = (req, res) => {
+    const sql = `
+        SELECT
+            b.auction_id,
+            b.bid_amount   AS highest_bid,
+            b.user_email   AS highest_bidder_email,
+            b.user_name    AS highest_bidder_name,
+            counts.total_bids
+        FROM bids b
+        INNER JOIN (
+            SELECT auction_id, MAX(bid_amount) AS max_amount, COUNT(*) AS total_bids
+            FROM bids
+            GROUP BY auction_id
+        ) counts ON b.auction_id = counts.auction_id AND b.bid_amount = counts.max_amount
+        ORDER BY b.created_at DESC
+    `;
+
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(200).json(rows);
+    });
+};
+
 module.exports = {
     placeBid,
     getUserBids,
-    getAuctionBids
+    getAuctionBids,
+    getHighestBids
 };
