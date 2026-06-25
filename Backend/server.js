@@ -12,16 +12,21 @@ const auctionRoutes = require("./routes/auctionRoutes");
 // Bid routes
 const bidRoutes = require("./routes/bidRoutes");
 
+// Watchlist and Notification routes
+const watchlistRoutes = require("./routes/watchlistRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+
 app.use(cors());
 app.use(express.json());
 
-// Serve uploaded images as static files.
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Removed /uploads route as we use Supabase storage exclusively
 
 // Mount routes
 app.use("/auction", auctionRoutes);
 app.use("/bids", bidRoutes);
 app.use("/api/feedback", require("./routes/feedbackRoutes"));
+app.use("/api/watchlist", watchlistRoutes);
+app.use("/api/notification", notificationRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -100,24 +100,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
-  useEffect(() => {
-    if (currentUser?.email) {
-      const saved = localStorage.getItem(`auctionmart_watchlist_${currentUser.email}`);
-      if (saved) {
-        try {
-          setFavorites(JSON.parse(saved));
-        } catch(e) {}
-      }
-    } else {
-      setFavorites([]);
-    }
-  }, [currentUser?.email]);
-
-  useEffect(() => {
-    if (currentUser?.email) {
-      localStorage.setItem(`auctionmart_watchlist_${currentUser.email}`, JSON.stringify(favorites));
-    }
-  }, [favorites, currentUser?.email]);
+  // The API fetch is now handled inside the data fetching useEffect below.
 
   // ── Helper: map a DB row to AuctionItem ──
   const mapDbRowToAuctionItem = useCallback((row: any): AuctionItem => ({
@@ -273,15 +256,38 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       })
       .catch(err => console.error("Failed to fetch user bids:", err));
 
+    // Fetch user's watchlist
+    api.get(`/watchlist/${encodeURIComponent(currentUser.email)}`)
+      .then(res => {
+        setFavorites(res.data || []);
+      })
+      .catch(err => console.error("Failed to fetch watchlist:", err));
+
     // Fetch highest bids
     refreshHighestBids();
   }, [currentUser?.email, mapDbRowToAuctionItem, refreshHighestBids]);
 
   const toggleFavorite = useCallback((id: string) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((favId) => favId !== id) : [...prev, id]
-    );
-  }, []);
+    if (!currentUser?.email) return; // Must be logged in
+
+    setFavorites(prev => {
+      const isFav = prev.includes(id);
+      if (isFav) {
+        // Optimistic UI update
+        const newFavs = prev.filter(f => f !== id);
+        // Call API to remove
+        api.delete(`/watchlist/${encodeURIComponent(currentUser.email)}/${encodeURIComponent(id)}`)
+          .catch(err => console.error("Failed to remove from watchlist:", err));
+        return newFavs;
+      } else {
+        const newFavs = [...prev, id];
+        // Call API to add
+        api.post('/watchlist', { user_email: currentUser.email, auction_id: id })
+          .catch(err => console.error("Failed to add to watchlist:", err));
+        return newFavs;
+      }
+    });
+  }, [currentUser?.email]);
 
   // ── Create listing: POST to backend, then update local state ──
   const handleCreateListing = useCallback((newItem: AuctionItem) => {

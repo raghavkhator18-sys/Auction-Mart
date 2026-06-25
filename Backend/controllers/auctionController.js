@@ -6,23 +6,14 @@
 //   - getAuctionById      → GET  /auction/:id
 //   - getUserListings     → GET  /auction/user/:email
 //   - deleteAuction       → DELETE /auction/:id
+//
+// Uses Supabase PostgreSQL for data and Supabase Storage
+// for product images.
 // ============================================================
 
-const { auctionsDb: db } = require("../db");
+const { query, getOne, run, supabase } = require("../db");
 const fs = require("fs");
 const path = require("path");
-
-// ============================================================
-// HELPER: Build the full path to an uploaded image file.
-//         image_path in DB is stored as "/uploads/filename.jpg"
-//         We strip the leading "/" and join with project root.
-// ============================================================
-function getImageFilePath(imagePath) {
-    // Remove the leading "/" to get a relative path like "uploads/filename.jpg"
-    const relativePath = imagePath.replace(/^\//, "");
-    // Build an absolute path from the Backend folder
-    return path.join(__dirname, "..", relativePath);
-}
 
 // ============================================================
 // HELPER: Generate a unique Lot Number
@@ -40,11 +31,72 @@ function generateLotNumber(category) {
 }
 
 // ============================================================
+// HELPER: Upload files to Supabase Storage
+// Returns an array of public URLs
+// ============================================================
+async function uploadToSupabaseStorage(files) {
+    const urls = [];
+    for (const file of files) {
+        const fileBuffer = file.buffer;
+        const ext = path.extname(file.originalname).toLowerCase();
+        const baseName = path.basename(file.originalname, ext)
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9\-]/g, "");
+        const storagePath = `products/${Date.now()}-${baseName}${ext}`;
+
+        const { data, error } = await supabase.storage
+            .from("product-images")
+            .upload(storagePath, fileBuffer, {
+                contentType: file.mimetype,
+                upsert: false,
+            });
+
+        if (error) {
+            console.error("Supabase Storage upload error:", error.message);
+            continue;
+        }
+
+        // Get the public URL
+        const { data: urlData } = supabase.storage
+            .from("product-images")
+            .getPublicUrl(storagePath);
+
+        urls.push(urlData.publicUrl);
+    }
+    return urls;
+}
+
+// ============================================================
+// HELPER: Delete a file from Supabase Storage by its public URL
+// ============================================================
+async function deleteFromSupabaseStorage(publicUrl) {
+    try {
+        // Extract the storage path from the public URL
+        // URL format: https://<project>.supabase.co/storage/v1/object/public/product-images/<path>
+        const bucketPrefix = "/storage/v1/object/public/product-images/";
+        const idx = publicUrl.indexOf(bucketPrefix);
+        if (idx === -1) return; // Not a Supabase Storage URL — skip (e.g. legacy local path)
+
+        const storagePath = decodeURIComponent(publicUrl.substring(idx + bucketPrefix.length));
+        const { error } = await supabase.storage
+            .from("product-images")
+            .remove([storagePath]);
+
+        if (error) {
+            console.warn("Warning: Could not delete image from storage:", error.message);
+        }
+    } catch (err) {
+        console.warn("Warning: Error deleting image from storage:", err.message);
+    }
+}
+
+// ============================================================
 // API 1: CREATE AUCTION LOT
 // POST /auction/create
 // Receives multipart/form-data (text fields + image file)
 // ============================================================
-const createAuctionLot = (req, res) => {
+const createAuctionLot = async (req, res) => {
     // --------------------------------------------------------
     // Step 1: Extract text fields from the form
     // --------------------------------------------------------
@@ -65,57 +117,61 @@ const createAuctionLot = (req, res) => {
     // Step 2: Validate required fields
     // --------------------------------------------------------
     if (!title || !category || !starting_price || !seller_email) {
-        if (req.files && req.files.length > 0) {
-            req.files.forEach(file => fs.unlink(file.path, () => {}));
-        }
         return res.status(400).json({
             message: "title, category, starting_price, and seller_email are required."
         });
     }
 
-    const image_path = req.files && req.files.length > 0
-        ? req.files.map(file => `/uploads/${file.filename}`).join(',')
-        : null;
-
-    const lot_number = generateLotNumber(category);
-
-    const sql = `
-        INSERT INTO auction_lots
-            (lot_number, title, category, starting_price, sku_reference, condition_status, description, image_path, seller_email, seller_name, duration, status)
-        VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const values = [
-        lot_number,
-        title,
-        category,
-        parseFloat(starting_price),
-        sku_reference   || null,
-        condition_status|| null,
-        description     || null,
-        image_path,
-        seller_email,
-        seller_name     || null,
-        parseInt(duration) || 604800,
-        status          || 'active'
-    ];
-
-    db.run(sql, values, function (err) {
-        if (err) {
-            // If DB insert fails, delete the uploaded image to keep things clean
-            if (req.file) {
-                fs.unlink(req.file.path, () => {});
+    try {
+        // --------------------------------------------------------
+        // Step 3: Upload images to Supabase Storage
+        // --------------------------------------------------------
+        let image_path = null;
+        if (req.files && req.files.length > 0) {
+            const urls = await uploadToSupabaseStorage(req.files);
+            if (urls.length > 0) {
+                image_path = urls.join(",");
             }
-            return res.status(500).json({ error: err.message });
         }
 
-        // this.lastID gives the auto-generated ID of the new row
+        const lot_number = generateLotNumber(category);
+
+        // --------------------------------------------------------
+        // Step 4: Insert into PostgreSQL
+        // --------------------------------------------------------
+        const sql = `
+            INSERT INTO auction_lots
+                (lot_number, title, category, starting_price, sku_reference, condition_status, description, image_path, seller_email, seller_name, duration, status)
+            VALUES
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING id
+        `;
+
+        const values = [
+            lot_number,
+            title,
+            category,
+            parseFloat(starting_price),
+            sku_reference   || null,
+            condition_status|| null,
+            description     || null,
+            image_path,
+            seller_email,
+            seller_name     || null,
+            parseInt(duration) || 604800,
+            status          || 'active'
+        ];
+
+        const result = await run(sql, values);
+
         res.status(201).json({
             message: "Auction lot created successfully",
-            auctionId: this.lastID
+            auctionId: result.rows[0].id
         });
-    });
+    } catch (err) {
+        console.error("Error creating auction lot:", err.message);
+        return res.status(500).json({ error: err.message });
+    }
 };
 
 // ============================================================
@@ -123,25 +179,24 @@ const createAuctionLot = (req, res) => {
 // GET /auction/all
 // Returns active listings in the database (for browsing/home feed)
 // ============================================================
-const getAllAuctions = (req, res) => {
+const getAllAuctions = async (req, res) => {
     const appliedFilters = { status: "active" };
-    const sql = `
-        SELECT * FROM auction_lots
-        WHERE status = ?
-        ORDER BY created_at DESC
-    `;
 
-    db.all(sql, [appliedFilters.status], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
+    try {
+        const rows = await query(
+            `SELECT * FROM auction_lots WHERE status = $1 ORDER BY created_at DESC`,
+            [appliedFilters.status]
+        );
+
         console.info("[auction/all] Public listing query", {
             totalReturned: rows.length,
             currentUserId: req.headers["x-user-id"] || null,
             appliedFilters
         });
         res.status(200).json(rows);
-    });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
 };
 
 // ============================================================
@@ -149,17 +204,14 @@ const getAllAuctions = (req, res) => {
 // GET /auction/:id
 // Returns complete details of one auction lot
 // ============================================================
-const getAuctionById = (req, res) => {
+const getAuctionById = async (req, res) => {
     const { id } = req.params;
 
-    const sql = `
-        SELECT * FROM auction_lots WHERE id = ?
-    `;
-
-    db.get(sql, [id], (err, row) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
+    try {
+        const row = await getOne(
+            `SELECT * FROM auction_lots WHERE id = $1`,
+            [id]
+        );
 
         // If no record found with that id, return 404
         if (!row) {
@@ -169,7 +221,9 @@ const getAuctionById = (req, res) => {
         }
 
         res.status(200).json(row);
-    });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
 };
 
 // ============================================================
@@ -177,20 +231,15 @@ const getAuctionById = (req, res) => {
 // GET /auction/user/:email
 // Returns all listings created by a specific seller
 // ============================================================
-const getUserListings = (req, res) => {
+const getUserListings = async (req, res) => {
     const { email } = req.params;
     const appliedFilters = { seller_email: email };
 
-    const sql = `
-        SELECT * FROM auction_lots
-        WHERE seller_email = ?
-        ORDER BY created_at DESC
-    `;
-
-    db.all(sql, [email], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
+    try {
+        const rows = await query(
+            `SELECT * FROM auction_lots WHERE seller_email = $1 ORDER BY created_at DESC`,
+            [email]
+        );
 
         console.info("[auction/user] My Listings query", {
             totalReturned: rows.length,
@@ -198,25 +247,27 @@ const getUserListings = (req, res) => {
             appliedFilters
         });
         res.status(200).json(rows);
-    });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
 };
 
 // ============================================================
 // API 5: DELETE AUCTION LOT
 // DELETE /auction/:id
-// Deletes the image file from disk AND removes the DB record
+// Deletes the image from Supabase Storage AND removes the DB record
 // ============================================================
-const deleteAuction = (req, res) => {
+const deleteAuction = async (req, res) => {
     const { id } = req.params;
 
-    // --------------------------------------------------------
-    // Step 1: Find the auction lot to get its image_path
-    //         We need this so we can delete the image file too
-    // --------------------------------------------------------
-    db.get("SELECT * FROM auction_lots WHERE id = ?", [id], (err, row) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
+    try {
+        // --------------------------------------------------------
+        // Step 1: Find the auction lot to get its image_path
+        // --------------------------------------------------------
+        const row = await getOne(
+            `SELECT * FROM auction_lots WHERE id = $1`,
+            [id]
+        );
 
         if (!row) {
             return res.status(404).json({
@@ -225,34 +276,26 @@ const deleteAuction = (req, res) => {
         }
 
         // --------------------------------------------------------
-        // Step 2: Delete the image files from the uploads folder
-        //         Only attempt if an image_path was stored
+        // Step 2: Delete the image files from Supabase Storage
         // --------------------------------------------------------
         if (row.image_path) {
-            const paths = row.image_path.split(',');
-            paths.forEach((imgPath) => {
-                const imageFilePath = getImageFilePath(imgPath.trim());
-                fs.unlink(imageFilePath, (fileErr) => {
-                    if (fileErr && fileErr.code !== "ENOENT") {
-                        console.warn(`Warning: Could not delete image file: ${imageFilePath}`);
-                    }
-                });
-            });
+            const paths = row.image_path.split(",");
+            for (const imgPath of paths) {
+                await deleteFromSupabaseStorage(imgPath.trim());
+            }
         }
 
         // --------------------------------------------------------
-        // Step 3: Delete the record from SQLite
+        // Step 3: Delete the record from PostgreSQL
         // --------------------------------------------------------
-        db.run("DELETE FROM auction_lots WHERE id = ?", [id], function (dbErr) {
-            if (dbErr) {
-                return res.status(500).json({ error: dbErr.message });
-            }
+        await run(`DELETE FROM auction_lots WHERE id = $1`, [id]);
 
-            res.status(200).json({
-                message: `Auction lot with id ${id} deleted successfully.`
-            });
+        res.status(200).json({
+            message: `Auction lot with id ${id} deleted successfully.`
         });
-    });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
 };
 
 // Export all controller functions so routes can use them
