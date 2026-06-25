@@ -98,10 +98,14 @@ export const MyListings: React.FC<MyListingsProps> = ({
       const response = await api.post('/auction/create', formData);
       const data = response.data;
 
-      const resolvedImageUrl =
+      const coverImageUrl =
         uploadedImages.length > 0
-          ? uploadedImages.map(img => img.preview).join(',')
+          ? uploadedImages[0].preview
           : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEi87bMnKhFHqJ3-zB0UuV6jek8iK5RePOJRXV62pmn0yIcl4v8EvDYcm-Ly55EYUuEciZN5oWWuibLFf4Sip57Ik2O_0b75GPA3RWubAg0gKLKgrgn2zTb8dlt_zamBRtVL2N9HW1AlE_8BEJw_IWbh_hbEwUmic1hFqKY3IXbqkjTDm7iz5bbUxyfDgqThvUCty4I2ey0N8HC-ijylmRVLpJGcJHnU7QISv1-lhrS4lBidJGqCXYBqgEpkJcLyZajyJ7svbRlwr2';
+
+      const galleryImageUrls = uploadedImages.length > 0
+        ? uploadedImages.map(img => img.preview)
+        : [];
 
       const newlyCreatedItem: AuctionItem = {
         id: `db-${data.auctionId}`,
@@ -110,7 +114,8 @@ export const MyListings: React.FC<MyListingsProps> = ({
         sku: newSku,
         currentBid: parsedPrice,
         totalBids: 0,
-        imageUrl: resolvedImageUrl,
+        imageUrl: coverImageUrl,
+        imageUrls: galleryImageUrls,
         timerSeconds: newDuration,
         status: 'active',
         condition: newCondition as any,

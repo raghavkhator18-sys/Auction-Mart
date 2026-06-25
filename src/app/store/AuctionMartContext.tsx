@@ -99,6 +99,25 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
+  useEffect(() => {
+    if (currentUser?.email) {
+      const saved = localStorage.getItem(`auctionmart_watchlist_${currentUser.email}`);
+      if (saved) {
+        try {
+          setFavorites(JSON.parse(saved));
+        } catch(e) {}
+      }
+    } else {
+      setFavorites([]);
+    }
+  }, [currentUser?.email]);
+
+  useEffect(() => {
+    if (currentUser?.email) {
+      localStorage.setItem(`auctionmart_watchlist_${currentUser.email}`, JSON.stringify(favorites));
+    }
+  }, [favorites, currentUser?.email]);
+
   // ── Helper: map a DB row to AuctionItem ──
   const mapDbRowToAuctionItem = useCallback((row: any): AuctionItem => ({
     id: `db-${row.id}`,
@@ -109,8 +128,11 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     currentBid: row.starting_price,
     totalBids: 0,
     imageUrl: row.image_path
-      ? row.image_path.split(',').map((p: string) => `${API_BASE}${p.trim()}`).join(',')
+      ? row.image_path.split(',').map((p: string) => `${API_BASE}${p.trim()}`)[0]
       : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEi87bMnKhFHqJ3-zB0UuV6jek8iK5RePOJRXV62pmn0yIcl4v8EvDYcm-Ly55EYUuEciZN5oWWuibLFf4Sip57Ik2O_0b75GPA3RWubAg0gKLKgrgn2zTb8dlt_zamBRtVL2N9HW1AlE_8BEJw_IWbh_hbEwUmic1hFqKY3IXbqkjTDm7iz5bbUxyfDgqThvUCty4I2ey0N8HC-ijylmRVLpJGcJHnU7QISv1-lhrS4lBidJGqCXYBqgEpkJcLyZajyJ7svbRlwr2',
+    imageUrls: row.image_path
+      ? row.image_path.split(',').map((p: string) => `${API_BASE}${p.trim()}`)
+      : [],
     timerSeconds: row.duration || 604800,
     status: (row.status as any) || 'active',
     condition: (row.condition_status as any) || 'New',
@@ -167,14 +189,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // My Listings = DB listings filtered to the current user
   const myListings = useMemo(() => {
     if (!currentUser?.email) return [];
-    return allDbListings.filter(item => {
-      // Match by seller name/email — DB listings store seller_email but our
-      // AuctionItem maps it to sellerName. We also store the original email
-      // in the mapping. For safety, match both approaches.
-      // The mapDbRowToAuctionItem sets sellerName from seller_name || seller_email.split('@')[0].
-      // We need a reliable match — let's check the raw list approach.
-      return true; // Placeholder — we need to track seller_email on AuctionItem
-    });
+    return allDbListings.filter(item => (item as any)._sellerEmail === currentUser.email);
   }, [allDbListings, currentUser?.email]);
 
   // Backward compat alias
@@ -294,6 +309,19 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const handlePlaceBid = useCallback((itemId: string, bidAmount: number, maxBid?: number) => {
     // Persist bid to backend FIRST, then refresh
     if (currentUser) {
+      // Optimistic update
+      setHighestBids(prev => {
+        const existing = prev.find(h => h.auction_id === itemId);
+        const others = prev.filter(h => h.auction_id !== itemId);
+        return [...others, {
+          auction_id: itemId,
+          highest_bid: Math.max(existing?.highest_bid || 0, bidAmount),
+          highest_bidder_email: currentUser.email,
+          highest_bidder_name: currentUser.name,
+          total_bids: (existing?.total_bids || 0) + 1
+        }];
+      });
+
       api.post(`/bids/place`, {
         auction_id: itemId,
         user_email: currentUser.email,
@@ -320,7 +348,10 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
           // Refresh highest bids so ALL views update
           refreshHighestBids();
         })
-        .catch(err => console.error("Failed to persist bid:", err));
+        .catch(err => {
+          console.error("Failed to persist bid:", err);
+          refreshHighestBids(); // revert optimistic update
+        });
     }
 
     // Add activity
@@ -345,6 +376,19 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const handleBidIncrease = useCallback((itemId: string, newAmount: number) => {
     // Persist bid
     if (currentUser) {
+      // Optimistic update
+      setHighestBids(prev => {
+        const existing = prev.find(h => h.auction_id === itemId);
+        const others = prev.filter(h => h.auction_id !== itemId);
+        return [...others, {
+          auction_id: itemId,
+          highest_bid: Math.max(existing?.highest_bid || 0, newAmount),
+          highest_bidder_email: currentUser.email,
+          highest_bidder_name: currentUser.name,
+          total_bids: (existing?.total_bids || 0) + 1
+        }];
+      });
+
       api.post(`/bids/place`, {
         auction_id: itemId,
         user_email: currentUser.email,
@@ -369,7 +413,10 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
           // Refresh highest bids so ALL views update
           refreshHighestBids();
         })
-        .catch(err => console.error("Failed to persist bid increase:", err));
+        .catch(err => {
+          console.error("Failed to persist bid increase:", err);
+          refreshHighestBids(); // revert optimistic update
+        });
     }
 
     setActivities((prevActivities) => {

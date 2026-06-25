@@ -10,6 +10,7 @@ export interface AuctionItem {
   yourMaxBid?: number;
   totalBids: number;
   imageUrl: string;
+  imageUrls?: string[];
   timerSeconds: number;
   timerText?: string;
   status: 'active' | 'ended' | 'draft' | 'flagged';

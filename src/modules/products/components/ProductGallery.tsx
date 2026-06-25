@@ -11,7 +11,9 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({ item }) => {
 
   // Parse multiple images if it's a user-uploaded item (comma-separated string)
   const isUserItem = item.id.toString().startsWith('db-');
-  const userImages = item.imageUrl ? item.imageUrl.split(',') : [];
+  const userImages = item.imageUrls && item.imageUrls.length > 0
+    ? item.imageUrls
+    : (item.imageUrl ? item.imageUrl.split(',') : []);
 
   // Fallback highkey gallery images for luxury feel (only for demo items)
   const galleryImages = isUserItem 
