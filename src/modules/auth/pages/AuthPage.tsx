@@ -77,6 +77,23 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     }
   };
 
+  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+    setErrorMsg('');
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin,
+        }
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setErrorMsg(getFriendlyAuthError(err, `Failed to connect with ${provider}.`));
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto py-12 px-4 space-y-8">
       <AuthHeader
@@ -96,6 +113,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             isSignUp={isSignUp}
             setIsSignUp={setIsSignUp}
             handleSubmit={handleSubmit}
+            handleOAuthLogin={handleOAuthLogin}
             errorMsg={errorMsg}
             loading={loading}
             fullName={fullName}

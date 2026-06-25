@@ -13,6 +13,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 interface CurrentUser {
   name: string;
   email: string;
+  avatar?: string;
 }
 
 // Shape of a bid row returned by the backend
@@ -189,8 +190,8 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // My Listings = DB listings filtered to the current user
   const myListings = useMemo(() => {
     if (!currentUser?.email) return [];
-    return allDbListings.filter(item => (item as any)._sellerEmail === currentUser.email);
-  }, [allDbListings, currentUser?.email]);
+    return browseAuctions.filter(item => (item as any)._sellerEmail === currentUser.email);
+  }, [browseAuctions, currentUser?.email]);
 
   // Backward compat alias
   const auctions = browseAuctions;
@@ -214,7 +215,8 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     return {
       name: user.user_metadata?.name || user.user_metadata?.full_name || user.email.split('@')[0],
-      email: user.email
+      email: user.email,
+      avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || user.user_metadata?.avatar
     };
   }, []);
 
