@@ -51,14 +51,15 @@ pool.on("error", (err) => {
 // Supabase Client — used for Storage (image uploads)
 // ------------------------------------------------------------
 const WebSocket = require("ws");
+// Attach ws to the global object so that @supabase/realtime-js 
+// detects it during WebSocketFactory.detectEnvironment() checks
+global.WebSocket = WebSocket;
+
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey, {
     auth: {
         persistSession: false
-    },
-    global: {
-        WebSocket: WebSocket
     }
 });
 
