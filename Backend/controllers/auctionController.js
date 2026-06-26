@@ -53,8 +53,8 @@ async function uploadToSupabaseStorage(files) {
             });
 
         if (error) {
-            console.error("Supabase Storage upload error:", error.message);
-            continue;
+            console.error("Supabase Storage upload complete error:", JSON.stringify(error, null, 2));
+            throw new Error(`Failed to upload image ${file.originalname} to Supabase Storage: ${error.message || JSON.stringify(error)}`);
         }
 
         // Get the public URL

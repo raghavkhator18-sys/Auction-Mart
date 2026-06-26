@@ -112,10 +112,16 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     currentBid: row.starting_price,
     totalBids: 0,
     imageUrl: row.image_path
-      ? row.image_path.split(',').map((p: string) => `${API_BASE}${p.trim()}`)[0]
+      ? row.image_path.split(',').map((p: string) => {
+          const trimmed = p.trim();
+          return trimmed.startsWith('http') ? trimmed : `${API_BASE}${trimmed}`;
+        })[0]
       : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEi87bMnKhFHqJ3-zB0UuV6jek8iK5RePOJRXV62pmn0yIcl4v8EvDYcm-Ly55EYUuEciZN5oWWuibLFf4Sip57Ik2O_0b75GPA3RWubAg0gKLKgrgn2zTb8dlt_zamBRtVL2N9HW1AlE_8BEJw_IWbh_hbEwUmic1hFqKY3IXbqkjTDm7iz5bbUxyfDgqThvUCty4I2ey0N8HC-ijylmRVLpJGcJHnU7QISv1-lhrS4lBidJGqCXYBqgEpkJcLyZajyJ7svbRlwr2',
     imageUrls: row.image_path
-      ? row.image_path.split(',').map((p: string) => `${API_BASE}${p.trim()}`)
+      ? row.image_path.split(',').map((p: string) => {
+          const trimmed = p.trim();
+          return trimmed.startsWith('http') ? trimmed : `${API_BASE}${trimmed}`;
+        })
       : [],
     timerSeconds: row.duration || 604800,
     status: (row.status as any) || 'active',

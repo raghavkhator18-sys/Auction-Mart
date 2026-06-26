@@ -17,6 +17,21 @@ const dns = require("dns");
 dns.setDefaultResultOrder("verbatim");
 
 // ------------------------------------------------------------
+// Environment Variable Validation
+// ------------------------------------------------------------
+const requiredEnvVars = [
+    "DATABASE_URL",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY"
+];
+
+for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+        throw new Error(`CRITICAL ERROR: ${envVar} is missing from environment variables. Backend startup aborted.`);
+    }
+}
+
+// ------------------------------------------------------------
 // PostgreSQL Pool — connects to Supabase PostgreSQL
 // ------------------------------------------------------------
 const pool = new Pool({
@@ -35,8 +50,8 @@ pool.on("error", (err) => {
 // ------------------------------------------------------------
 // Supabase Client — used for Storage (image uploads)
 // ------------------------------------------------------------
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // ------------------------------------------------------------
