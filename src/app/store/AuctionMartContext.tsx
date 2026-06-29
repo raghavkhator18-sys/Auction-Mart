@@ -83,8 +83,11 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Demo data (read-only baseline)
   const [demoAuctions, setDemoAuctions] = useState<AuctionItem[]>(mockAuctions);
 
-  // ALL user-created listings from every seller (persisted in SQLite)
+  // ALL user-created listings from every seller (active only — for Browse page)
   const [allDbListings, setAllDbListings] = useState<AuctionItem[]>([]);
+
+  // Current user's own listings — ALL statuses including drafts (for My Listings page)
+  const [myDbListings, setMyDbListings] = useState<AuctionItem[]>([]);
 
   // User bids (persisted in SQLite)
   const [userBids, setUserBids] = useState<UserBidRecord[]>([]);
@@ -176,11 +179,10 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return [...mergedDemo, ...mergedDb];
   }, [demoAuctions, allDbListings, highestBids, userBids]);
 
-  // My Listings = DB listings filtered to the current user
+  // My Listings = user's own DB listings (ALL statuses including drafts)
   const myListings = useMemo(() => {
-    if (!currentUser?.email) return [];
-    return browseAuctions.filter(item => (item as any)._sellerEmail === currentUser.email);
-  }, [browseAuctions, currentUser?.email]);
+    return myDbListings;
+  }, [myDbListings]);
 
   // Backward compat alias
   const auctions = browseAuctions;
@@ -240,20 +242,36 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       .catch(err => console.error("Failed to fetch highest bids:", err));
   }, []);
 
+  // ── Helper: refresh current user's own listings (all statuses) ──
+  const refreshMyListings = useCallback((email: string) => {
+    api.get(`/auction/user/${encodeURIComponent(email)}`)
+      .then(res => {
+        const listings: AuctionItem[] = (res.data || []).map((row: any) => ({
+          ...mapDbRowToAuctionItem(row),
+          _sellerEmail: row.seller_email,
+        }));
+        setMyDbListings(listings);
+      })
+      .catch(err => console.error("Failed to fetch my listings:", err));
+  }, [mapDbRowToAuctionItem]);
+
   // ── Fetch ALL data from backend when user is known ──
   useEffect(() => {
     if (!currentUser?.email) return;
 
-    // Fetch ALL listings from all sellers (for Browse page cross-account visibility)
+    // Fetch ALL active listings from all sellers (for Browse page cross-account visibility)
     api.get('/auction/all')
       .then(res => {
         const dbListings: AuctionItem[] = (res.data || []).map((row: any) => ({
           ...mapDbRowToAuctionItem(row),
-          _sellerEmail: row.seller_email, // stash for filtering myListings
+          _sellerEmail: row.seller_email,
         }));
         setAllDbListings(dbListings);
       })
       .catch(err => console.error("Failed to fetch all listings:", err));
+
+    // Fetch current user's own listings — includes drafts
+    refreshMyListings(currentUser.email);
 
     // Fetch user's bids
     api.get(`/bids/user/${encodeURIComponent(currentUser.email)}`)
@@ -271,7 +289,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     // Fetch highest bids
     refreshHighestBids();
-  }, [currentUser?.email, mapDbRowToAuctionItem, refreshHighestBids]);
+  }, [currentUser?.email, mapDbRowToAuctionItem, refreshHighestBids, refreshMyListings]);
 
   const toggleFavorite = useCallback((id: string) => {
     if (!currentUser?.email) return; // Must be logged in
@@ -295,20 +313,23 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
   }, [currentUser?.email]);
 
-  // ── Create listing: POST to backend, then update local state ──
+  // ── Create listing: update local state (API call handled in MyListings form) ──
   const handleCreateListing = useCallback((newItem: AuctionItem) => {
-    // Add to local allDbListings state immediately for responsiveness
-    setAllDbListings((prev) => [newItem, ...prev]);
-
-    // Also persist via API (the MyListings form now handles the API call directly)
+    if (newItem.status === 'active') {
+      // Only active listings appear in browse
+      setAllDbListings((prev) => [newItem, ...prev]);
+    }
+    // Always add to user's own listings (including drafts)
+    setMyDbListings((prev) => [newItem, ...prev]);
   }, []);
 
   const handleDeleteListing = useCallback(async (itemId: string) => {
     // Only allow deleting user-created listings (those with 'db-' prefix)
     if (!itemId.startsWith('db-')) return;
 
-    // Optimistic delete
+    // Optimistic delete from both lists
     setAllDbListings(prev => prev.filter(item => item.id !== itemId));
+    setMyDbListings(prev => prev.filter(item => item.id !== itemId));
 
     // Persist delete
     try {
@@ -485,6 +506,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setCurrentUser(null);
     setSession(null);
     setAllDbListings([]);
+    setMyDbListings([]);
     setUserBids([]);
     setHighestBids([]);
     setActivities([]);

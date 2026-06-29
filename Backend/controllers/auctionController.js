@@ -115,10 +115,19 @@ const createAuctionLot = async (req, res) => {
 
     // --------------------------------------------------------
     // Step 2: Validate required fields
+    // Drafts only need a title; active listings also need starting_price.
     // --------------------------------------------------------
-    if (!title || !category || !starting_price || !seller_email) {
+    const isDraft = (status === 'draft');
+
+    if (!title || !seller_email) {
         return res.status(400).json({
-            message: "title, category, starting_price, and seller_email are required."
+            message: "title and seller_email are required."
+        });
+    }
+
+    if (!isDraft && !starting_price) {
+        return res.status(400).json({
+            message: "starting_price is required when publishing a listing."
         });
     }
 
@@ -134,7 +143,7 @@ const createAuctionLot = async (req, res) => {
             }
         }
 
-        const lot_number = generateLotNumber(category);
+        const lot_number = generateLotNumber(category || 'General');
 
         // --------------------------------------------------------
         // Step 4: Insert into PostgreSQL
@@ -150,8 +159,8 @@ const createAuctionLot = async (req, res) => {
         const values = [
             lot_number,
             title,
-            category,
-            parseFloat(starting_price),
+            category        || 'General',
+            parseFloat(starting_price) || 0,
             sku_reference   || null,
             condition_status|| null,
             description     || null,

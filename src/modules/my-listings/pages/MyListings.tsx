@@ -16,7 +16,7 @@ import { useListingStats } from '../hooks/useListingStats';
 import { useImageUpload } from '../hooks/useImageUpload';
 import { DURATION_OPTIONS } from '../constants/listingConstants';
 
-import { Gavel, X } from 'lucide-react';
+import { Gavel, X, CheckCircle2, XCircle } from 'lucide-react';
 
 interface MyListingsProps {
   auctions: AuctionItem[];
@@ -44,6 +44,15 @@ export const MyListings: React.FC<MyListingsProps> = ({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  /* ── Toast notification ── */
+  type Toast = { type: 'success' | 'error'; message: string };
+  const [toast, setToast] = useState<Toast | null>(null);
+
+  const showToast = (type: Toast['type'], message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 4000);
+  };
+
   const generateRandomSku = () => `REF-${Math.floor(100000 + Math.random() * 900000)}`;
 
   /* ── Core form fields ── */
@@ -69,7 +78,15 @@ export const MyListings: React.FC<MyListingsProps> = ({
 
   /* ── Form submit ── */
   const submitListing = async (status: 'active' | 'draft') => {
-    if (!newTitle || !newPrice) return;
+    // For drafts: only title is required. For active: title + price.
+    if (!newTitle) {
+      showToast('error', 'Please enter a title before saving.');
+      return;
+    }
+    if (status === 'active' && !newPrice) {
+      showToast('error', 'Please enter a starting price before publishing.');
+      return;
+    }
 
     const parsedPrice = parseFloat(newPrice) || 100;
 
@@ -95,23 +112,38 @@ export const MyListings: React.FC<MyListingsProps> = ({
     }
 
     try {
-      let response;
+      let newlyCreatedItem: AuctionItem | null = null;
+
       if (editingId) {
+        // UPDATE existing record (edit draft → save draft OR publish)
         const numericId = editingId.replace('db-', '');
-        response = await api.put(`/auction/${numericId}`, formData);
-        window.location.reload();
+        await api.put(`/auction/${numericId}`, formData);
+
+        // Update local myDbListings in place via onCreateListing won't work for edits;
+        // instead, reload the page so the context re-fetches all listings cleanly.
+        showToast(
+          'success',
+          status === 'active'
+            ? 'Listing published successfully!'
+            : 'Draft updated successfully.'
+        );
+        setTimeout(() => window.location.reload(), 1200);
+        return;
       } else {
-        response = await api.post('/auction/create', formData);
+        // CREATE new record
+        const response = await api.post('/auction/create', formData);
         const data = response.data;
-        const coverImageUrl = uploadedImages.length > 0 ? uploadedImages[0].preview : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEi87bMnKhFHqJ3-zB0UuV6jek8iK5RePOJRXV62pmn0yIcl4v8EvDYcm-Ly55EYUuEciZN5oWWuibLFf4Sip57Ik2O_0b75GPA3RWubAg0gKLKgrgn2zTb8dlt_zamBRtVL2N9HW1AlE_8BEJw_IWbh_hbEwUmic1hFqKY3IXbqkjTDm7iz5bbUxyfDgqThvUCty4I2ey0N8HC-ijylmRVLpJGcJHnU7QISv1-lhrS4lBidJGqCXYBqgEpkJcLyZajyJ7svbRlwr2';
+        const coverImageUrl = uploadedImages.length > 0
+          ? uploadedImages[0].preview
+          : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEi87bMnKhFHqJ3-zB0UuV6jek8iK5RePOJRXV62pmn0yIcl4v8EvDYcm-Ly55EYUuEciZN5oWWuibLFf4Sip57Ik2O_0b75GPA3RWubAg0gKLKgrgn2zTb8dlt_zamBRtVL2N9HW1AlE_8BEJw_IWbh_hbEwUmic1hFqKY3IXbqkjTDm7iz5bbUxyfDgqThvUCty4I2ey0N8HC-ijylmRVLpJGcJHnU7QISv1-lhrS4lBidJGqCXYBqgEpkJcLyZajyJ7svbRlwr2';
         const galleryImageUrls = uploadedImages.length > 0 ? uploadedImages.map(img => img.preview) : [];
 
-        const newlyCreatedItem: AuctionItem = {
+        newlyCreatedItem = {
           id: `db-${data.auctionId}`,
           title: newTitle,
           category: newCategory,
           sku: newSku,
-          currentBid: parsedPrice,
+          currentBid: parseFloat(newPrice) || 0,
           totalBids: 0,
           imageUrl: coverImageUrl,
           imageUrls: galleryImageUrls,
@@ -124,26 +156,36 @@ export const MyListings: React.FC<MyListingsProps> = ({
           sellerSales: 0,
           sellerAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJMliNAX9iwfBs5w9IqD-A5JVNLkceWMpZoXHttDLkZEn9GsuALDInSRPSVqEUs5GGYq5hJYwIMcA_AEsIR1pYOZAPxg1w-vtbzAHQcf7Xd-KYn_4reIVsYn08Nby_mysL-pYseyUnxPuL1-2-zzQyhbrw04Sh2jQ6v-ljtHCyKHj_dYb8UR3pIPlo_bG9h3PKpf9ujxJ6NbQ1Srun08ibBUmXs7jnMImhAnexk1IjdciFq59YeCsye27wK9nsIfcg4_WF-qg4uy0v',
         };
-
         onCreateListing(newlyCreatedItem);
       }
 
+      showToast(
+        'success',
+        status === 'draft'
+          ? 'Draft saved successfully. You can continue editing it later from My Listings.'
+          : 'Listing published successfully!'
+      );
+
       setIsFormOpen(false);
       setEditingId(null);
-      setNewTitle('');
-      setNewPrice('');
-      setNewDescription('');
-      setNewReservePrice('');
-      setNewDuration(604800);
-      setNewCategory('Luxury Watches');
-      setNewCondition('New');
-      setNewSku(generateRandomSku());
-      clearImages();
+      resetForm();
     } catch (err: any) {
       console.error('Failed to create/update listing:', err);
       const errMsg = err.response?.data?.message || 'Failed to process listing. Please try again.';
-      alert(errMsg);
+      showToast('error', errMsg);
     }
+  };
+
+  const resetForm = () => {
+    setNewTitle('');
+    setNewPrice('');
+    setNewDescription('');
+    setNewReservePrice('');
+    setNewDuration(604800);
+    setNewCategory('Luxury Watches');
+    setNewCondition('New');
+    setNewSku(generateRandomSku());
+    clearImages();
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -160,11 +202,11 @@ export const MyListings: React.FC<MyListingsProps> = ({
     setNewTitle(item.title);
     setNewCategory(item.category);
     setNewSku(item.sku || generateRandomSku());
-    setNewPrice(item.currentBid.toString());
+    setNewPrice(item.currentBid > 0 ? item.currentBid.toString() : '');
     setNewCondition(item.condition);
     setNewDescription(item.description || '');
     setNewDuration(item.timerSeconds);
-    clearImages(); // clear existing image previews to avoid confusion since they aren't Files
+    clearImages();
     setIsFormOpen(true);
   };
 
@@ -184,6 +226,29 @@ export const MyListings: React.FC<MyListingsProps> = ({
 
   return (
     <div className="space-y-7 pb-20">
+      {/* ── Toast Notification ── */}
+      {toast && (
+        <div
+          className={`fixed top-5 right-5 z-50 flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border max-w-sm animate-in fade-in slide-in-from-top-3 duration-300 ${
+            toast.type === 'success'
+              ? 'bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-700'
+              : 'bg-white dark:bg-slate-900 border-red-200 dark:border-red-700'
+          }`}
+        >
+          {toast.type === 'success' ? (
+            <CheckCircle2 size={20} className="text-emerald-500 shrink-0 mt-0.5" />
+          ) : (
+            <XCircle size={20} className="text-red-500 shrink-0 mt-0.5" />
+          )}
+          <p className="text-sm font-medium text-slate-800 dark:text-slate-100 leading-snug">{toast.message}</p>
+          <button
+            onClick={() => setToast(null)}
+            className="ml-auto shrink-0 text-slate-400 hover:text-slate-600 cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
       <MyListingsHeader isFormOpen={isFormOpen} setIsFormOpen={setIsFormOpen} />
       
       <StatsCards
