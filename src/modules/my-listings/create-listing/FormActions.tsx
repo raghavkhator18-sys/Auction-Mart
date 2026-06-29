@@ -3,15 +3,16 @@ import { CheckCircle2 } from 'lucide-react';
 
 interface FormActionsProps {
   setIsFormOpen: (val: boolean) => void;
+  onSaveDraft: () => void;
 }
 
-export const FormActions: React.FC<FormActionsProps> = ({ setIsFormOpen }) => (
+export const FormActions: React.FC<FormActionsProps> = ({ setIsFormOpen, onSaveDraft }) => (
   <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
     {/* Ghost: Save Draft */}
     <button
       id="cancel-add-listing-btn"
       type="button"
-      onClick={() => setIsFormOpen(false)}
+      onClick={onSaveDraft}
       className="px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 transition-all cursor-pointer"
     >
       Save Draft

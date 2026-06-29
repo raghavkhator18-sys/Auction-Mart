@@ -7,9 +7,10 @@ interface ListingRowProps {
   item: AuctionItem;
   onInspect: (item: AuctionItem) => void;
   onDelete: (itemId: string) => void;
+  onEdit: (item: AuctionItem) => void;
 }
 
-export const ListingRow: React.FC<ListingRowProps> = ({ item, onInspect, onDelete }) => {
+export const ListingRow: React.FC<ListingRowProps> = ({ item, onInspect, onDelete, onEdit }) => {
   return (
     <tr className="hover:bg-blue-50/30 transition-colors text-xs text-slate-700 dark:text-slate-200">
       {/* Thumbnail & title */}
@@ -69,6 +70,19 @@ export const ListingRow: React.FC<ListingRowProps> = ({ item, onInspect, onDelet
             <Eye size={11} />
             View
           </button>
+          
+          {item.status === 'draft' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(item);
+              }}
+              title="Edit draft"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-amber-500 hover:border-amber-500 hover:text-white rounded-lg text-[11px] text-slate-700 dark:text-slate-200 font-bold transition-all duration-150 cursor-pointer shadow-sm"
+            >
+              Edit
+            </button>
+          )}
           
           {item.id.toString().startsWith('db-') && (
             <button

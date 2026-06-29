@@ -9,6 +9,7 @@ import { FormActions } from './FormActions';
 interface CreateListingFormProps {
   setIsFormOpen: (val: boolean) => void;
   handleFormSubmit: (e: React.FormEvent) => void;
+  onSaveDraft: () => void;
   // Basic info state
   newTitle: string;
   setNewTitle: (val: string) => void;
@@ -43,7 +44,7 @@ export const CreateListingForm: React.FC<CreateListingFormProps> = ({
   newTitle, setNewTitle, newCategory, setNewCategory, newCondition, setNewCondition,
   newPrice, setNewPrice, newReservePrice, setNewReservePrice, newDuration, setNewDuration, newSku, setNewSku,
   uploadedImages, isDragOver, setIsDragOver, handleFileDrop, handleFileInput, removeImage,
-  newDescription, setNewDescription,
+  newDescription, setNewDescription, onSaveDraft
 }) => {
   return (
     <div className="flex-1 min-w-0 space-y-5">
@@ -69,7 +70,7 @@ export const CreateListingForm: React.FC<CreateListingFormProps> = ({
           newDescription={newDescription}
           setNewDescription={setNewDescription}
         />
-        <FormActions setIsFormOpen={setIsFormOpen} />
+        <FormActions setIsFormOpen={setIsFormOpen} onSaveDraft={onSaveDraft} />
     </div>
   );
 };

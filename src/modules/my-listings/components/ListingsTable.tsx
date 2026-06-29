@@ -6,9 +6,10 @@ interface ListingsTableProps {
   listings: AuctionItem[];
   onInspect: (item: AuctionItem) => void;
   onDelete: (itemId: string) => void;
+  onEdit: (item: AuctionItem) => void;
 }
 
-export const ListingsTable: React.FC<ListingsTableProps> = ({ listings, onInspect, onDelete }) => {
+export const ListingsTable: React.FC<ListingsTableProps> = ({ listings, onInspect, onDelete, onEdit }) => {
   return (
     <>
       {/* Mobile Card View */}
@@ -63,6 +64,17 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({ listings, onInspec
                 >
                   View
                 </button>
+                {item.status === 'draft' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(item);
+                    }}
+                    className="px-3 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg text-xs font-bold transition-colors"
+                  >
+                    Edit
+                  </button>
+                )}
                 {item.id.toString().startsWith('db-') && (
                   <button
                     onClick={() => {
@@ -96,7 +108,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({ listings, onInspec
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {listings.map((item) => (
-              <ListingRow key={item.id} item={item} onInspect={onInspect} onDelete={onDelete} />
+              <ListingRow key={item.id} item={item} onInspect={onInspect} onDelete={onDelete} onEdit={onEdit} />
             ))}
           </tbody>
         </table>

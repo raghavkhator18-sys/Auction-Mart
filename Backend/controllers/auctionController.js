@@ -298,11 +298,77 @@ const deleteAuction = async (req, res) => {
     }
 };
 
+// ============================================================
+// API 6: UPDATE AUCTION LOT
+// PUT /auction/:id
+// ============================================================
+const updateAuction = async (req, res) => {
+    const { id } = req.params;
+    const {
+        title,
+        category,
+        starting_price,
+        sku_reference,
+        condition_status,
+        description,
+        duration,
+        status,
+        existing_images
+    } = req.body;
+
+    try {
+        const row = await getOne(`SELECT * FROM auction_lots WHERE id = $1`, [id]);
+        if (!row) {
+            return res.status(404).json({ message: `Auction lot with id ${id} not found.` });
+        }
+
+        let image_paths = [];
+        if (existing_images) {
+            image_paths = existing_images.split(",").map(s => s.trim()).filter(s => s);
+        }
+
+        if (req.files && req.files.length > 0) {
+            const urls = await uploadToSupabaseStorage(req.files);
+            image_paths.push(...urls);
+        }
+
+        const final_image_path = image_paths.length > 0 ? image_paths.join(",") : null;
+
+        const sql = `
+            UPDATE auction_lots
+            SET title = $1, category = $2, starting_price = $3, sku_reference = $4,
+                condition_status = $5, description = $6, image_path = $7, duration = $8, status = $9
+            WHERE id = $10
+        `;
+
+        const values = [
+            title || row.title,
+            category || row.category,
+            starting_price ? parseFloat(starting_price) : row.starting_price,
+            sku_reference !== undefined ? sku_reference : row.sku_reference,
+            condition_status !== undefined ? condition_status : row.condition_status,
+            description !== undefined ? description : row.description,
+            final_image_path !== undefined ? final_image_path : row.image_path,
+            duration ? parseInt(duration) : row.duration,
+            status || row.status,
+            id
+        ];
+
+        await run(sql, values);
+
+        res.status(200).json({ message: "Auction lot updated successfully" });
+    } catch (err) {
+        console.error("Error updating auction lot:", err.message);
+        return res.status(500).json({ error: err.message });
+    }
+};
+
 // Export all controller functions so routes can use them
 module.exports = {
     createAuctionLot,
     getAllAuctions,
     getAuctionById,
     getUserListings,
-    deleteAuction
+    deleteAuction,
+    updateAuction
 };

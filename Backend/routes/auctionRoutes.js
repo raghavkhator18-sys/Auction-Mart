@@ -8,6 +8,7 @@
 //   GET    /auction/user/:email     → Get listings by a seller
 //   GET    /auction/:id             → Get one auction lot by ID
 //   DELETE /auction/:id             → Delete an auction lot
+//   PUT    /auction/:id             → Update an auction lot
 //
 // Note: /auction/user/:email MUST be defined BEFORE /auction/:id
 //       otherwise Express will treat "user" as an :id param.
@@ -26,7 +27,8 @@ const {
     getAllAuctions,
     getAuctionById,
     getUserListings,
-    deleteAuction
+    deleteAuction,
+    updateAuction
 } = require("../controllers/auctionController");
 
 // ============================================================
@@ -82,5 +84,22 @@ router.get("/:id", getAuctionById);
 // Example: DELETE /auction/5
 // ============================================================
 router.delete("/:id", deleteAuction);
+
+// ============================================================
+// PUT /auction/:id
+// Updates an auction lot and handles optional new image uploads.
+// ============================================================
+router.put(
+    "/:id",
+    (req, res, next) => {
+        upload.array("images", 5)(req, res, (err) => {
+            if (err) {
+                return res.status(400).json({ message: err.message });
+            }
+            next();
+        });
+    },
+    updateAuction
+);
 
 module.exports = router;

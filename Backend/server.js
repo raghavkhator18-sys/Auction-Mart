@@ -25,8 +25,8 @@ app.use(express.json());
 app.use("/auction", auctionRoutes);
 app.use("/bids", bidRoutes);
 app.use("/api/feedback", require("./routes/feedbackRoutes"));
-app.use("/api/watchlist", watchlistRoutes);
-app.use("/api/notification", notificationRoutes);
+app.use("/watchlist", watchlistRoutes);
+app.use("/notification", notificationRoutes);
 
 const PORT = process.env.PORT || 5000;
 
