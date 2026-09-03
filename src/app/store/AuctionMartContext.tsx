@@ -68,6 +68,8 @@ interface AuctionMartContextValue {
   isAuthLoading: boolean;
   handleSignInSuccess: (name: string, email: string) => void;
   logout: () => Promise<void>;
+  openListingForm: boolean;
+  setOpenListingForm: (v: boolean) => void;
 }
 
 const AuctionMartContext = createContext<AuctionMartContextValue | null>(null);
@@ -79,6 +81,7 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [currentScreen, setCurrentScreenState] = useState<ScreenId>('home');
   const [currentRole, setCurrentRole] = useState<UserRole>('client');
   const [searchQuery, setSearchQuery] = useState('');
+  const [openListingForm, setOpenListingForm] = useState(false);
 
   // Demo data (read-only baseline)
   const [demoAuctions, setDemoAuctions] = useState<AuctionItem[]>(mockAuctions);
@@ -584,7 +587,9 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       session,
       isAuthLoading,
       handleSignInSuccess,
-      logout
+      logout,
+      openListingForm,
+      setOpenListingForm
     }),
     [
       currentScreen,
@@ -611,7 +616,9 @@ export const AuctionMartProvider: React.FC<{ children: React.ReactNode }> = ({ c
       session,
       isAuthLoading,
       handleSignInSuccess,
-      logout
+      logout,
+      openListingForm,
+      setOpenListingForm
     ]
   );
 

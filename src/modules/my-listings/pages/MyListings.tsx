@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuctionItem, ScreenId } from '@/shared/types';
 import { useAuctionMart } from '@/app/store';
@@ -31,7 +31,7 @@ export const MyListings: React.FC<MyListingsProps> = ({
   setCurrentScreen,
   setSelectedProduct,
 }) => {
-  const { currentUser, handleDeleteListing } = useAuctionMart();
+  const { currentUser, handleDeleteListing, openListingForm, setOpenListingForm } = useAuctionMart();
 
   /* ── Listing filter + search ── */
   const {
@@ -43,6 +43,15 @@ export const MyListings: React.FC<MyListingsProps> = ({
   /* ── Form open/close ── */
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  /* ── Auto-open form when triggered from navbar ── */
+  useEffect(() => {
+    if (openListingForm) {
+      setIsFormOpen(true);
+      setEditingId(null);
+      setOpenListingForm(false);
+    }
+  }, [openListingForm, setOpenListingForm]);
 
   /* ── Toast notification ── */
   type Toast = { type: 'success' | 'error'; message: string };
