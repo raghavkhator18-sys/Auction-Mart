@@ -30,11 +30,11 @@ export const ProductInfo: React.FC<ProductInfoProps> = ({ item }) => {
         <div>
           <span className="text-[9px] text-blue-800 font-bold uppercase tracking-wider block">AUCTION STATUS</span>
           <span className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 mt-1">
-            <Clock size={16} className="text-blue-600 animate-pulse" /> Live Room
+            <Clock size={16} className="text-blue-600 animate-pulse" /> Live
           </span>
         </div>
         <div className="sm:pl-5 pt-2 sm:pt-0 border-t sm:border-t-0 border-blue-200/50 sm:border-transparent">
-          <span className="text-[9px] text-blue-800 font-bold uppercase tracking-wider block">CLOSING TIMER</span>
+          <span className="text-[9px] text-blue-800 font-bold uppercase tracking-wider block">CLOSING IN</span>
           <span className="text-lg font-mono font-black text-blue-600 tracking-tight mt-1 inline-block">
             {formatTimer(item.timerSeconds)}
           </span>

@@ -8,6 +8,7 @@ import React, {
   ReactNode,
   useId,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -201,6 +202,35 @@ export const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps
   ({ className, children, ...props }, ref) => {
     const { open, setOpen, triggerRef, contentId, triggerId } = useSelectContext();
     const contentRef = useRef<HTMLDivElement | null>(null);
+    const [coords, setCoords] = useState<{ top: number; left: number; width: number; placeAbove: boolean } | null>(null);
+
+    // Track trigger position and calculate coords
+    useEffect(() => {
+      if (!open || !triggerRef.current) return;
+
+      const updatePosition = () => {
+        if (!triggerRef.current) return;
+        const rect = triggerRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const placeAbove = spaceBelow < 260 && rect.top > 260;
+
+        setCoords({
+          top: placeAbove ? rect.top - 8 : rect.bottom + 8,
+          left: rect.left,
+          width: rect.width,
+          placeAbove,
+        });
+      };
+
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true);
+        window.removeEventListener('resize', updatePosition);
+      };
+    }, [open, triggerRef]);
 
     // Close on click outside & Escape
     useEffect(() => {
@@ -238,7 +268,7 @@ export const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps
 
     if (!open) return null;
 
-    return (
+    const portalContent = (
       <div
         ref={(node) => {
           contentRef.current = node;
@@ -248,9 +278,16 @@ export const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps
         id={contentId}
         role="listbox"
         aria-labelledby={triggerId}
+        style={{
+          position: 'fixed',
+          top: coords?.placeAbove ? undefined : `${coords?.top ?? 0}px`,
+          bottom: coords?.placeAbove ? `${window.innerHeight - (coords?.top ?? 0)}px` : undefined,
+          left: `${coords?.left ?? 0}px`,
+          width: `${coords?.width ?? 288}px`,
+          zIndex: 9999,
+        }}
         className={cn(
-          'absolute left-0 top-full mt-2 w-full max-w-[288px] z-50 overflow-hidden',
-          'rounded-[14px] p-1.5 shadow-xl',
+          'z-[9999] overflow-hidden rounded-[14px] p-1.5 shadow-2xl',
           // Light Mode
           'bg-white border border-slate-200 text-slate-900 shadow-slate-900/10',
           // Dark Mode (Classic Dark Theme)
@@ -265,6 +302,10 @@ export const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps
         </div>
       </div>
     );
+
+    return typeof document !== 'undefined'
+      ? createPortal(portalContent, document.body)
+      : portalContent;
   }
 );
 SelectContent.displayName = 'SelectContent';
