@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { Search, SlidersHorizontal, RotateCcw, Grid2X2, Tag, IndianRupee, Clock3 } from 'lucide-react';
 import { CATEGORIES, DURATION_OPTIONS } from '../../my-listings/constants/listingConstants';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface AuctionFiltersProps {
   searchQuery: string;
@@ -86,17 +93,22 @@ export const AuctionFilters: React.FC<AuctionFiltersProps> = ({
         <label htmlFor="filter-category" className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
           <Grid2X2 size={14} className="text-slate-400" /> Category
         </label>
-        <select
-          id="filter-category"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="w-full text-xs px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600 text-slate-900 dark:text-white bg-white dark:bg-slate-900"
-        >
-          <option value="all">All Categories</option>
-          {CATEGORIES.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger
+            id="filter-category"
+            className="w-full max-w-[288px] h-12 rounded-[14px]"
+          >
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent className="w-full max-w-[288px] rounded-[14px]">
+            <SelectItem value="all">All Categories</SelectItem>
+            {CATEGORIES.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* 3. Condition */}

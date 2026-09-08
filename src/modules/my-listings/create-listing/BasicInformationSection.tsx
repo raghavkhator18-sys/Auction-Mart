@@ -3,6 +3,13 @@ import { Tag, ChevronRight } from 'lucide-react';
 import { FormSection } from './FormSection';
 import { FieldLabel, INPUT_CLS, SELECT_CLS } from './FieldLabel';
 import { CATEGORIES, CONDITIONS } from '../constants/listingConstants';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface BasicInformationSectionProps {
   newTitle: string;
@@ -45,17 +52,19 @@ export const BasicInformationSection: React.FC<BasicInformationSectionProps> = (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="relative">
           <FieldLabel htmlFor="new-cat-select" required>Category</FieldLabel>
-          <select
-            id="new-cat-select"
-            value={newCategory}
-            onChange={e => setNewCategory(e.target.value)}
-            className={SELECT_CLS}
-          >
-            {CATEGORIES.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-          <ChevronRight size={14} className="absolute right-3 top-9 text-slate-400 rotate-90 pointer-events-none" />
+          <Select value={newCategory} onValueChange={setNewCategory}>
+            <SelectTrigger
+              id="new-cat-select"
+              className="w-full h-12 rounded-[14px]"
+            >
+              <SelectValue placeholder="Select Category" />
+            </SelectTrigger>
+            <SelectContent className="w-full rounded-[14px]">
+              {CATEGORIES.map(c => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="relative">
