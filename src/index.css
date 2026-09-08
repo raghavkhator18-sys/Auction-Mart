@@ -4,6 +4,37 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-slate-300: var(--slate-300);
+  --color-slate-400: var(--slate-400);
+  --color-slate-500: var(--slate-500);
+  --color-slate-600: var(--slate-600);
+  --color-slate-700: var(--slate-700);
+  --color-slate-800: var(--slate-800);
+  --color-slate-900: var(--slate-900);
+  --color-slate-950: var(--slate-950);
+}
+
+:root {
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020617;
+}
+
+.dark {
+  --slate-300: #d4d4d8;
+  --slate-400: #a1a1aa;
+  --slate-500: #71717a;
+  --slate-600: #3e3e44;
+  --slate-700: #2a2a30;
+  --slate-800: #1b1b20;
+  --slate-900: #131316;
+  --slate-950: #0d0d10;
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -11,6 +42,10 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+  }
+
+  body {
+    @apply transition-colors duration-300;
   }
   
   img, video {

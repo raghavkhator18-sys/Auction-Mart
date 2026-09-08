@@ -147,9 +147,9 @@ export const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerPr
           // Light Mode
           'bg-white text-slate-900 border border-slate-200 hover:border-slate-300 hover:bg-slate-50/60 shadow-2xs',
           'focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500',
-          // Dark Mode
-          'dark:bg-[#0b0b0b] dark:text-white dark:border-white/20 dark:hover:border-white/30 dark:hover:bg-[#121212]',
-          'dark:focus:ring-white/20 dark:focus:border-white/40',
+          // Dark Mode (Classic Dark Theme)
+          'dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700/80 dark:hover:border-slate-600 dark:hover:bg-slate-800/80',
+          'dark:focus:ring-slate-500/20 dark:focus:border-slate-500',
           'disabled:cursor-not-allowed disabled:opacity-50',
           className
         )}
@@ -253,14 +253,14 @@ export const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps
           'rounded-[14px] p-1.5 shadow-xl',
           // Light Mode
           'bg-white border border-slate-200 text-slate-900 shadow-slate-900/10',
-          // Dark Mode
-          'dark:bg-[#0b0b0b] dark:border-white/20 dark:text-white dark:shadow-2xl',
+          // Dark Mode (Classic Dark Theme)
+          'dark:bg-slate-800 dark:border-slate-700/80 dark:text-slate-100 dark:shadow-2xl',
           'animate-in fade-in-0 zoom-in-95 duration-150 ease-out',
           className
         )}
         {...props}
       >
-        <div className="max-h-60 overflow-y-auto overflow-x-hidden space-y-0.5 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent pr-0.5">
+        <div className="max-h-60 overflow-y-auto overflow-x-hidden space-y-0.5 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent pr-0.5">
           {children}
         </div>
       </div>
@@ -315,9 +315,9 @@ export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
           // Light Mode
           'text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus:bg-slate-100 focus:text-slate-900',
           isSelected && 'bg-slate-100 text-slate-900 font-semibold',
-          // Dark Mode
-          'dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white',
-          isSelected && 'dark:bg-white/10 dark:text-white dark:font-medium',
+          // Dark Mode (Classic Dark Theme)
+          'dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-white dark:focus:bg-slate-700/60 dark:focus:text-white',
+          isSelected && 'dark:bg-slate-700/70 dark:text-white dark:font-medium',
           disabled && 'pointer-events-none opacity-40',
           className
         )}
@@ -325,7 +325,7 @@ export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
       >
         <span className="truncate">{children}</span>
         {isSelected && (
-          <Check className="h-4 w-4 text-blue-600 dark:text-white/90 shrink-0 ml-2" strokeWidth={2.5} />
+          <Check className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 ml-2" strokeWidth={2.5} />
         )}
       </div>
     );

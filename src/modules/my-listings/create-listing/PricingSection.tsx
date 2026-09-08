@@ -1,8 +1,15 @@
 import React from 'react';
-import { IndianRupee, ChevronRight } from 'lucide-react';
+import { IndianRupee } from 'lucide-react';
 import { FormSection } from './FormSection';
-import { FieldLabel, INPUT_CLS, SELECT_CLS } from './FieldLabel';
+import { FieldLabel, INPUT_CLS } from './FieldLabel';
 import { DURATION_OPTIONS } from '../constants/listingConstants';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface PricingSectionProps {
   newPrice: string;
@@ -72,17 +79,21 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
       {/* Auction Duration */}
       <div className="relative">
         <FieldLabel htmlFor="auction-duration-select" required>Auction Duration</FieldLabel>
-        <select
-          id="auction-duration-select"
-          value={newDuration}
-          onChange={e => setNewDuration(Number(e.target.value))}
-          className={SELECT_CLS}
-        >
-          {DURATION_OPTIONS.map(d => (
-            <option key={d.value} value={d.value}>{d.label}</option>
-          ))}
-        </select>
-        <ChevronRight size={14} className="absolute right-3 top-9 text-slate-400 rotate-90 pointer-events-none" />
+        <Select value={String(newDuration)} onValueChange={(val) => setNewDuration(Number(val))}>
+          <SelectTrigger
+            id="auction-duration-select"
+            className="w-full h-12 rounded-[14px]"
+          >
+            <SelectValue placeholder="Select Duration" />
+          </SelectTrigger>
+          <SelectContent className="w-full rounded-[14px]">
+            {DURATION_OPTIONS.map((d) => (
+              <SelectItem key={d.value} value={String(d.value)}>
+                {d.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
 

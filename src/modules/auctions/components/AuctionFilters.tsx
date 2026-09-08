@@ -171,17 +171,25 @@ export const AuctionFilters: React.FC<AuctionFiltersProps> = ({
         <label htmlFor="filter-duration" className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
           <Clock3 size={14} className="text-slate-400" /> Auction Duration
         </label>
-        <select
-          id="filter-duration"
-          value={selectedDuration}
-          onChange={(e) => setSelectedDuration(e.target.value ? Number(e.target.value) : '')}
-          className="w-full text-xs px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600 text-slate-900 dark:text-white bg-white dark:bg-slate-900"
+        <Select
+          value={selectedDuration === '' ? 'all' : String(selectedDuration)}
+          onValueChange={(val) => setSelectedDuration(val === 'all' ? '' : Number(val))}
         >
-          <option value="">Any Duration</option>
-          {DURATION_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+          <SelectTrigger
+            id="filter-duration"
+            className="w-full max-w-[288px] h-12 rounded-[14px]"
+          >
+            <SelectValue placeholder="Any Duration" />
+          </SelectTrigger>
+          <SelectContent className="w-full max-w-[288px] rounded-[14px]">
+            <SelectItem value="all">Any Duration</SelectItem>
+            {DURATION_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={String(opt.value)}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       </div>
