@@ -7,15 +7,17 @@ export const useFeedback = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendFeedback = async (payload: FeedbackPayload) => {
+  const sendFeedback = async (payload: FeedbackPayload): Promise<boolean> => {
     setIsLoading(true);
     setSuccess(false);
     setError(null);
     try {
       await submitFeedback(payload);
       setSuccess(true);
+      return true;
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to submit feedback. Please try again.');
+      return false;
     } finally {
       setIsLoading(false);
     }

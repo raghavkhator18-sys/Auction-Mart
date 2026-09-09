@@ -8,13 +8,13 @@ const { query, getOne, run } = require("../db");
 
 // Insert a new feedback entry
 const createFeedback = async (feedbackData) => {
-    const { user_id, username, email, category, subject, message } = feedbackData;
+    const { username, email, category, subject, message } = feedbackData;
     const sql = `
-        INSERT INTO feedback (user_id, username, email, category, subject, message)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO feedback (username, email, category, subject, message)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING id
     `;
-    const result = await run(sql, [user_id, username, email, category, subject, message]);
+    const result = await run(sql, [username, email, category, subject, message]);
     return { id: result.rows[0].id, ...feedbackData, status: 'pending' };
 };
 

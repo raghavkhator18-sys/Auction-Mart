@@ -25,13 +25,13 @@ const submitFeedback = async (req, res) => {
             return res.status(400).json({ success: false, message: "Message must be between 10 and 2000 characters" });
         }
 
-        // Get user info from token (guaranteed since authMiddleware is applied)
-        const user_id = req.user ? req.user.id : null;
+        // Get user info from token if available (populated by feedbackMiddleware)
         const email = req.user ? req.user.email : null;
-        const username = req.user ? req.user.name : null;
+        const username = req.user
+            ? (req.user.user_metadata?.name || req.user.name || null)
+            : null;
 
         const feedbackData = {
-            user_id,
             username,
             email,
             category,

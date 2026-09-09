@@ -6,13 +6,80 @@ import { validateFeedback } from '../utils/feedbackHelpers';
 import { FeedbackCategorySelect } from './FeedbackCategorySelect';
 import { FeedbackTextarea } from './FeedbackTextarea';
 
+const DRAFT_STORAGE_KEY = 'auctionmart_feedback_draft';
+
+const VALID_CATEGORIES: FeedbackCategory[] = [
+  'Feature Request',
+  'Bug Report',
+  'UI/UX Improvement',
+  'Account Issue',
+  'Auction Issue',
+  'General Feedback'
+];
+
+interface FeedbackDraft {
+  subject?: string;
+  category?: FeedbackCategory | '';
+  message?: string;
+}
+
+const getSavedDraft = (): FeedbackDraft => {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return {
+      subject: typeof parsed.subject === 'string' ? parsed.subject : '',
+      category: VALID_CATEGORIES.includes(parsed.category) ? parsed.category : '',
+      message: typeof parsed.message === 'string' ? parsed.message : ''
+    };
+  } catch {
+    return {};
+  }
+};
+
 export const FeedbackForm: React.FC = () => {
-  const [subject, setSubject] = useState('');
-  const [category, setCategory] = useState<FeedbackCategory | ''>('');
-  const [message, setMessage] = useState('');
+  const initialDraft = React.useMemo(() => getSavedDraft(), []);
+
+  const [subject, setSubject] = useState(initialDraft.subject || '');
+  const [category, setCategory] = useState<FeedbackCategory | ''>(initialDraft.category || '');
+  const [message, setMessage] = useState(initialDraft.message || '');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const { isLoading, success, error, sendFeedback, resetStatus } = useFeedback();
+
+  // Save draft whenever user changes values
+  React.useEffect(() => {
+    if (subject || category || message) {
+      try {
+        localStorage.setItem(
+          DRAFT_STORAGE_KEY,
+          JSON.stringify({ subject, category, message })
+        );
+      } catch (err) {
+        console.warn('Failed to save feedback draft to localStorage:', err);
+      }
+    } else {
+      try {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+      } catch (err) {
+        console.warn('Failed to remove feedback draft from localStorage:', err);
+      }
+    }
+  }, [subject, category, message]);
+
+  const handleReset = () => {
+    setSubject('');
+    setCategory('');
+    setMessage('');
+    setFormErrors({});
+    resetStatus();
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch (err) {
+      console.warn('Failed to clear feedback draft:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,18 +92,24 @@ export const FeedbackForm: React.FC = () => {
     }
 
     setFormErrors({});
-    await sendFeedback({
+    const isSuccess = await sendFeedback({
       subject,
       category: category as FeedbackCategory,
       message
     });
 
-    if (!error) {
-      // Clear form on success
+    if (isSuccess) {
+      // Clear form and draft only on success
       setSubject('');
       setCategory('');
       setMessage('');
+      try {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+      } catch (err) {
+        console.warn('Failed to clear draft on success:', err);
+      }
     }
+    // If failed, draft remains in localStorage and in form state
   };
 
   return (
@@ -94,14 +167,24 @@ export const FeedbackForm: React.FC = () => {
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={`w-full flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 text-xs font-bold px-6 py-3 rounded-xl transition-all cursor-pointer shadow-sm shadow-blue-500/10 mt-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-        >
-          <MessageSquareMore size={16} />
-          {isLoading ? 'Sending...' : 'Send Feedback'}
-        </button>
+        <div className="flex items-center gap-3 mt-2">
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={isLoading || (!subject && !category && !message)}
+            className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Clear
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 text-xs font-bold px-6 py-3 rounded-xl transition-all cursor-pointer shadow-sm shadow-blue-500/10 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            <MessageSquareMore size={16} />
+            {isLoading ? 'Sending...' : 'Send Feedback'}
+          </button>
+        </div>
       </form>
     </div>
   );

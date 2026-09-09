@@ -136,7 +136,6 @@ async function initTables() {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS feedback (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER,
                 username TEXT,
                 email TEXT,
                 category TEXT NOT NULL,
